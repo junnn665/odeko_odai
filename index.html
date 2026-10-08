@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2B1F5C">
-<title>おでこでお題当て by中濱</title>
+<title>おでこでお題当て</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -353,7 +353,8 @@ const GENRES = [
     ["和田毅","⚾"],["石川雅規","⚾"],["江川卓","⚾"],["江夏豊","⚾"],["金田正一","⚾"],["張本勲","⚾"],["衣笠祥雄","⚾"],["山本浩二","⚾"],["村田兆治","⚾"],["工藤公康","⚾"],
     ["秋山幸二","⚾"],["佐々木主浩","⚾"],["城島健司","⚾"],["小久保裕紀","⚾"],["高橋由伸","⚾"],["宮本慎也","⚾"],["福留孝介","⚾"],["岩瀬仁紀","⚾"],["黒田博樹","⚾"],["稲葉篤紀","⚾"],
     ["ランディ・バース","⚾"],["タフィ・ローズ","⚾"],["新井貴浩","⚾"],["鳥谷敬","⚾"],["糸井嘉男","⚾"],["井端弘和","⚾"],["立浪和義","⚾"],["中畑清","⚾"],["川上哲治","⚾"],["稲尾和久","⚾"],
-    ["赤星憲広","⚾"],["松井稼頭央","⚾"],["岩隈久志","⚾"],["内川聖一","⚾"]]}
+    ["赤星憲広","⚾"],["松井稼頭央","⚾"],["岩隈久志","⚾"],["内川聖一","⚾"]]},
+  {name:"数字", icon:"🔢", color:"#7FD8FF", topics: Array.from({length:100}, (_, i) => [String(i+1), ""])}  // 1〜100
 ];
 const COMBOS = GENRES.length * 7;                 // ジャンル × 人数(2〜8)
 const MAXSEED = Math.floor(10000 / COMBOS);       // 4ケタに収まる部屋の数
@@ -482,6 +483,7 @@ function toReady(){ closeForehead(); renderReady(); go("s-ready"); }
 function fitTopic(){
   const w=$("fh-word"), e=$("fh-emoji"), len=Math.max(w.textContent.length,1);
   const W=innerWidth, H=innerHeight;
+  if(!e.textContent){ w.style.fontSize = Math.min((W*0.8)/(len*0.62), H*(W>H?0.5:0.32)) + "px"; return; }  // 数字など絵なし
   if(W>H){ e.style.fontSize = H*0.5 + "px"; w.style.fontSize = Math.min((W*0.5)/len, H*0.3) + "px"; }
   else { e.style.fontSize = Math.min(H*0.36, W*0.42) + "px"; w.style.fontSize = Math.min((W*0.82)/len, H*0.16, 120) + "px"; }
 }
@@ -501,7 +503,7 @@ function startForehead(){
   fhTimer=setInterval(()=>{
     c--; if(c>0){ tick(); return; }
     clearInterval(fhTimer); cnt.textContent="";
-    $("fh-emoji").textContent=emoji; $("fh-word").textContent=word;
+    $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word;
     $("fh-card").classList.add("on"); fitTopic();
     $("fh-hint").style.display="block";
     setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-actions").style.gridTemplateColumns="1fr 1fr"; $("fh-hint").style.display="none"; } }, 5000);
