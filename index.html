@@ -148,6 +148,42 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:25}
 
 @media (orientation: landscape){ #fh-card{flex-direction:row;gap:4vmin;padding:4vmin 6vmin} }
+/* 判定ボタン（おでこ画面） */
+#fh-actions{grid-template-columns:1fr 1fr 1fr}
+#fh-actions .btn{padding:12px 6px;font-size:17px}
+#fh-actions .btn .ic{display:block;font-size:26px;line-height:1.1}
+#fh-back{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:14px;cursor:pointer;display:none}
+#fh-miss{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:16px;display:none}
+#fh-card.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(6px)}}
+#fh-result{position:fixed;inset:0;z-index:12;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:var(--night)}
+#fh-result.on{display:flex}
+#fh-result .big{font-size:40px}
+#fh-result .ans{background:#fff;border:4px solid var(--ink);border-radius:22px;box-shadow:8px 8px 0 var(--ink);padding:16px 28px;margin:18px 0 22px;font-family:var(--display);font-size:34px}
+#fh-result .ans span{display:block;font-size:64px;line-height:1.1}
+#fh-result .btn{max-width:340px}
+
+/* 結果・判定シート */
+.status{flex:none;text-align:center;font-weight:800;font-size:13px;min-width:56px}
+.status .m{font-size:28px;display:block;line-height:1}
+.miss{display:inline-block;background:#FFE3E8;color:#C21E3C;border-radius:999px;padding:0 8px;font-size:12px;margin-left:4px}
+.prow.give{background:#F1F1F4;box-shadow:none;transform:translateY(3px)}
+.result-card{background:var(--yellow)}
+.result-card h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 8px}
+.tot{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:2px dashed #E3DEF3;font-size:15px}
+.tot:last-child{border:0}
+.tot b{flex:1}
+.tot .pt{font-family:var(--display);font-size:20px}
+#sheet{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:flex-end;justify-content:center;z-index:40}
+#sheet.on{display:flex}
+#sheet .card{width:100%;max-width:480px;margin:0 0 0;border-radius:24px 24px 0 0;padding:18px 16px max(18px,env(safe-area-inset-bottom))}
+#sheet h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 4px;text-align:center}
+#sheet p{text-align:center;color:var(--muted);margin:0 0 6px;font-size:14px}
+#sheet .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+#sheet .grid3 .btn{padding:12px 4px;font-size:15px;margin:8px 0}
+#sheet .grid3 .btn .ic{display:block;font-size:24px}
+#sheet .btn.small{padding:10px;font-size:15px;margin:6px 0}
+
 /* 確認ダイアログ */
 #dlg{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
 #dlg.on{display:flex}
@@ -184,9 +220,9 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
       <li>全員が同じ部屋番号を入れて、自分の番号を選ぶ（ほかの人と重ならないように）。</li>
       <li>「おでこにセット」を押して、3秒以内に画面を外向きにしておでこへ。</li>
       <li>1人ずつ順番に質問。ほかの人は「はい」「いいえ」などで答える。</li>
-      <li>わかったら答えを言う。当たったらスマホを下ろして確認！</li>
-      <li>当たった人のスマホで「記録ボード」を開き、そのあと当てた人を順番にタップ。</li>
-      <li>全員で「もう一回」を押すと、次のお題が配られる（前と重なりません）。</li>
+      <li>わかったら答えを言う。画面を見ている人が「⭕正解」「❌ハズレ」を押してあげる。降参なら「🏳️ギブアップ」。</li>
+      <li>結果は1台のスマホの「記録ボード」でまとめると、順位と総合ポイントが出せる。</li>
+      <li>全員で「次のラウンドへ」を押すと、次のお題が配られる（前と重なりません）。</li>
     </ol>
   </details>
 </section>
@@ -252,18 +288,26 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
   </div>
   <p class="sub" style="margin-top:0">全員のラウンドがそろっているか確認してね</p>
   <button class="btn red" onclick="startForehead()">おでこにセット</button>
-  <button class="btn" onclick="openBoard()">記録ボード</button>
+  <div class="row2">
+    <button class="btn" onclick="openBoard()">記録ボード</button>
+    <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
+  </div>
 </section>
 
 <!-- 記録ボード -->
 <section class="screen" id="s-board">
   <div class="topbar"><button class="link" onclick="toReady()">‹ もどる</button><span class="link" id="b-round" style="cursor:default"></span></div>
   <h2 class="telop">記録ボード</h2>
-  <p class="hint">当てた人を順番にタップ。長押しで名前を変えられます。</p>
+  <div class="card result-card" id="done-card" style="display:none">
+    <h3>ラウンド終了！</h3>
+    <div id="done-list"></div>
+  </div>
+  <p class="hint">人をタップして「正解」「ハズレ」「ギブアップ」を記録。名前もここで変えられます。</p>
   <div id="b-list"></div>
-  <div class="row2">
-    <button class="btn" onclick="undoRank()">1つ取り消す</button>
-    <button class="btn mint" onclick="nextRound()">もう一回</button>
+  <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
+  <div class="card" id="total-card" style="display:none;margin-top:16px">
+    <p class="label">総合ランキング（1位は人数と同じ点、順位が1つ下がるごとに1点減る。ギブアップは0点）</p>
+    <div id="total"></div>
   </div>
   <div class="card" id="hist-card" style="display:none;margin-top:16px">
     <p class="label">これまでの結果</p>
@@ -276,11 +320,21 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
   <div id="fh-genre"></div>
   <div id="fh-count"></div>
   <div id="fh-card"><div id="fh-emoji"></div><div id="fh-word"></div></div>
+  <button id="fh-back" onclick="toReady()">‹ もどる</button>
+  <div id="fh-miss"></div>
   <div id="fh-actions">
-    <button class="btn red" onclick="openBoard()">当たった！</button>
-    <button class="btn" onclick="toReady()">もどる</button>
+    <button class="btn red" onclick="judge('win')"><span class="ic">⭕</span>正解</button>
+    <button class="btn" onclick="judge('miss')"><span class="ic">❌</span>ハズレ</button>
+    <button class="btn" onclick="judge('give')"><span class="ic">🏳️</span>ギブアップ</button>
   </div>
   <div id="fh-hint">ダブルタップで画面をかくす</div>
+</div>
+<div id="fh-result">
+  <h2 class="telop big" id="fr-title"></h2>
+  <div class="ans" id="fr-ans"></div>
+  <p class="sub" id="fr-sub" style="margin:0 0 8px"></p>
+  <button class="btn yellow" onclick="openBoard()">記録ボードを見る</button>
+  <button class="btn clear" onclick="$('fh-result').classList.remove('on');toReady()">準備画面にもどる</button>
 </div>
 <div id="fh-cover">
   <h2 class="telop" style="font-size:34px;margin-bottom:24px">かくし中</h2>
@@ -291,6 +345,19 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 <div id="dlg" role="dialog" aria-modal="true"><div class="card">
   <h3 id="dlg-title"></h3><p id="dlg-text"></p><input id="dlg-input" maxlength="12">
   <div class="row2"><button class="btn" id="dlg-no">やめる</button><button class="btn red" id="dlg-ok"></button></div>
+</div></div>
+<div id="sheet" role="dialog" aria-modal="true"><div class="card">
+  <h3 id="sh-title"></h3><p id="sh-sub"></p>
+  <div class="grid3">
+    <button class="btn red" onclick="sheetDo('win')"><span class="ic">⭕</span>正解</button>
+    <button class="btn" onclick="sheetDo('miss')"><span class="ic">❌</span>ハズレ</button>
+    <button class="btn" onclick="sheetDo('give')"><span class="ic">🏳️</span>ギブアップ</button>
+  </div>
+  <div class="row2">
+    <button class="btn small" onclick="sheetDo('undo')">結果を取り消す</button>
+    <button class="btn small" onclick="sheetDo('name')">名前を変える</button>
+  </div>
+  <button class="btn clear" style="color:var(--muted);border-color:transparent" onclick="$('sheet').classList.remove('on')">閉じる</button>
 </div></div>
 <canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
@@ -354,6 +421,18 @@ const GENRES = [
     ["秋山幸二","⚾"],["佐々木主浩","⚾"],["城島健司","⚾"],["小久保裕紀","⚾"],["高橋由伸","⚾"],["宮本慎也","⚾"],["福留孝介","⚾"],["岩瀬仁紀","⚾"],["黒田博樹","⚾"],["稲葉篤紀","⚾"],
     ["ランディ・バース","⚾"],["タフィ・ローズ","⚾"],["新井貴浩","⚾"],["鳥谷敬","⚾"],["糸井嘉男","⚾"],["井端弘和","⚾"],["立浪和義","⚾"],["中畑清","⚾"],["川上哲治","⚾"],["稲尾和久","⚾"],
     ["赤星憲広","⚾"],["松井稼頭央","⚾"],["岩隈久志","⚾"],["内川聖一","⚾"]]},
+  {name:"お笑い芸人", icon:"🎤", color:"#FFB4E6", topics:[
+    ["ダウンタウン","🎤"],["ウッチャンナンチャン","🎤"],["とんねるず","🎤"],["明石家さんま","🎤"],["ビートたけし","🎤"],["タモリ","🎤"],["ザ・ドリフターズ","🎤"],["志村けん","🎤"],["コント55号","🎤"],["横山やすし・西川きよし","🎤"],
+    ["オール阪神・巨人","🎤"],["爆笑問題","🎤"],["ナインティナイン","🎤"],["ロンドンブーツ1号2号","🎤"],["さまぁ～ず","🎤"],["くりぃむしちゅー","🎤"],["ネプチューン","🎤"],["雨上がり決死隊","🎤"],["ココリコ","🎤"],["よゐこ","🎤"],
+    ["キャイ～ン","🎤"],["バナナマン","🎤"],["おぎやはぎ","🎤"],["東京03","🎤"],["中川家","🎤"],["ますだおかだ","🎤"],["フットボールアワー","🎤"],["ブラックマヨネーズ","🎤"],["チュートリアル","🎤"],["笑い飯","🎤"],
+    ["麒麟","🎤"],["サンドウィッチマン","🎤"],["アンタッチャブル","🎤"],["南海キャンディーズ","🎤"],["オードリー","🎤"],["千鳥","🎤"],["かまいたち","🎤"],["霜降り明星","🎤"],["ミルクボーイ","🎤"],["マヂカルラブリー","🎤"],
+    ["錦鯉","🎤"],["ウエストランド","🎤"],["令和ロマン","🎤"],["NON STYLE","🎤"],["パンクブーブー","🎤"],["トータルテンボス","🎤"],["タカアンドトシ","🎤"],["オリエンタルラジオ","🎤"],["ぺこぱ","🎤"],["EXIT","🎤"],
+    ["四千頭身","🎤"],["見取り図","🎤"],["ニューヨーク","🎤"],["オズワルド","🎤"],["空気階段","🎤"],["ジャルジャル","🎤"],["ハライチ","🎤"],["ナイツ","🎤"],["銀シャリ","🎤"],["和牛","🎤"],
+    ["トレンディエンジェル","🎤"],["とろサーモン","🎤"],["ダイアン","🎤"],["スリムクラブ","🎤"],["博多華丸・大吉","🎤"],["野性爆弾","🎤"],["次長課長","🎤"],["品川庄司","🎤"],["ドランクドラゴン","🎤"],["インパルス","🎤"],
+    ["アンジャッシュ","🎤"],["スピードワゴン","🎤"],["平成ノブシコブシ","🎤"],["ピース","🎤"],["パンサー","🎤"],["チョコレートプラネット","🎤"],["シソンヌ","🎤"],["ハナコ","🎤"],["かが屋","🎤"],["ジャングルポケット","🎤"],
+    ["三四郎","🎤"],["ティモンディ","🎤"],["U字工事","🎤"],["ザ・たっち","🎤"],["バイきんぐ","🎤"],["ロッチ","🎤"],["ハリセンボン","🎤"],["森三中","🎤"],["3時のヒロイン","🎤"],["ガンバレルーヤ","🎤"],
+    ["友近","🎤"],["渡辺直美","🎤"],["ゆりやんレトリィバァ","🎤"],["イモトアヤコ","🎤"],["横澤夏子","🎤"],["出川哲朗","🎤"],["有吉弘行","🎤"],["劇団ひとり","🎤"],["陣内智則","🎤"],["ケンドーコバヤシ","🎤"],
+    ["カンニング竹山","🎤"],["狩野英孝","🎤"],["宮川大輔","🎤"],["小島よしお","🎤"],["ダンディ坂野","🎤"],["ヒロシ","🎤"],["波田陽区","🎤"],["ハリウッドザコシショウ","🎤"],["アキラ100%","🎤"],["とにかく明るい安村","🎤"]]},
   {name:"数字", icon:"🔢", color:"#7FD8FF", topics: Array.from({length:100}, (_, i) => [String(i+1), ""])}  // 1〜100
 ];
 const COMBOS = GENRES.length * 7;                 // ジャンル × 人数(2〜8)
@@ -493,7 +572,8 @@ function startForehead(){
   const g=genreOf(S.code), [word,emoji]=topicsFor(S.code,S.round)[S.num-1];
   const fh=$("forehead"); fh.style.setProperty("--gc", g.color);
   $("fh-genre").textContent = g.icon+" "+g.name;
-  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none";
+  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none";
+  $("fh-result").classList.remove("on"); showMiss();
   fh.classList.add("on"); keepAwake();
   if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
   if(!S.start){ S.start=Date.now(); save(); }
@@ -506,12 +586,12 @@ function startForehead(){
     $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word;
     $("fh-card").classList.add("on"); fitTopic();
     $("fh-hint").style.display="block";
-    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-actions").style.gridTemplateColumns="1fr 1fr"; $("fh-hint").style.display="none"; } }, 5000);
+    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hint").style.display="none"; } }, 3000);
   },1000);
 }
 function closeForehead(){
   clearInterval(fhTimer);
-  $("forehead").classList.remove("on"); $("fh-cover").classList.remove("on");
+  $("forehead").classList.remove("on"); $("fh-cover").classList.remove("on"); $("fh-result").classList.remove("on");
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
   try{ wakeLock && wakeLock.release(); }catch(e){}
 }
@@ -526,51 +606,138 @@ addEventListener("resize", ()=>{ if($("fh-card").classList.contains("on")) fitTo
 // ===== 記録ボード =====
 const nameOf = i => S.names[i] || `プレイヤー${i}`;
 const MEDALS = ["🥇","🥈","🥉"];
+const medal = k => MEDALS[k] || `${k+1}位`;
 function fmt(ms){ const s=Math.round(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
-function openBoard(){ closeForehead(); renderBoard(); go("s-board"); }
+function fix(){ S.ranks=S.ranks||[]; S.gave=S.gave||[]; S.miss=S.miss||{}; S.history=S.history||[]; S.names=S.names||{}; }
+function statusOf(p){
+  const r=S.ranks.findIndex(x=>x.p===p);
+  if(r>=0) return {s:"win", rank:r, t:S.ranks[r].t};
+  if(S.gave.includes(p)) return {s:"give"};
+  return {s:"play"};
+}
+const missOf = p => S.miss[p]||0;
+const allDone = () => { for(let i=1;i<=countOf(S.code);i++) if(statusOf(i).s==="play") return false; return true; };
+
+// ラウンドの結果（順位・ポイント）
+function roundResults(){
+  const n=countOf(S.code), topics=topicsFor(S.code,S.round);
+  return Array.from({length:n},(_,k)=>{ const p=k+1, st=statusOf(p);
+    return {p, name:nameOf(p), topic:topics[k][0], s:st.s, rank:st.rank, t:st.t, miss:missOf(p), pts: st.s==="win" ? n-st.rank : 0}; });
+}
+
+// 判定（おでこ画面のボタン：画面を見ている人が押す）
+function setResult(p, kind){
+  fix();
+  const was=statusOf(p).s;
+  if(kind==="miss"){ if(was!=="play") return false; S.miss[p]=missOf(p)+1; }
+  if(kind==="win"){ if(was==="win") return false; S.gave=S.gave.filter(x=>x!==p); S.ranks.push({p, t:Date.now()-(S.start||Date.now())}); }
+  if(kind==="give"){ if(was!=="play") return false; S.gave.push(p); }
+  if(kind==="undo"){ S.ranks=S.ranks.filter(x=>x.p!==p); S.gave=S.gave.filter(x=>x!==p); }
+  save(); return true;
+}
+function showMiss(){ fix(); const m=missOf(S.num), el=$("fh-miss"); el.style.display = m ? "block" : "none"; el.textContent=`❌ × ${m}`; }
+function judge(kind){
+  const p=S.num, topic=topicsFor(S.code,S.round)[p-1];
+  if(kind==="miss"){
+    if(!setResult(p,"miss")) return;
+    showMiss(); const c=$("fh-card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+    if(navigator.vibrate) navigator.vibrate(200);
+    return;
+  }
+  ask({title: kind==="win" ? "正解にしますか？" : "ギブアップしますか？", text:"お題が本人に見えます", ok: kind==="win" ? "正解！" : "ギブアップ",
+    onOk:()=>{
+      setResult(p,kind); clearInterval(fhTimer);
+      const st=statusOf(p);
+      $("fr-title").textContent = kind==="win" ? `正解！ ${medal(st.rank)}` : "ざんねん！";
+      $("fr-ans").innerHTML = `${topic[1]?`<span>${topic[1]}</span>`:""}${esc(topic[0])}`;
+      $("fr-sub").textContent = kind==="win" ? `タイム ${fmt(st.t)}・ハズレ ${missOf(p)}回` : `ハズレ ${missOf(p)}回`;
+      $("fh-result").classList.add("on");
+      if(kind==="win") confetti();
+    }});
+}
+
+function openBoard(){ closeForehead(); fix(); renderBoard(); go("s-board"); }
 function renderBoard(){
+  fix();
   const n=countOf(S.code), topics=topicsFor(S.code,S.round);
   $("b-round").textContent = `ラウンド ${S.round+1}`;
   let h="";
   for(let i=1;i<=n;i++){
-    const r=S.ranks.findIndex(x=>x.p===i), won=r>=0, [w,e]=topics[i-1];
-    h+=`<div class="prow ${won?'won':''}" data-p="${i}">
-      <div class="pnum">${i}</div><div class="pem">${e}</div>
-      <div class="pname">${esc(nameOf(i))}<div class="ptopic">${esc(w)}${i===S.num?"・あなた":""}</div></div>
-      <div class="rank">${won?`<span class="m">${MEDALS[r]||(r+1)+"位"}</span>${fmt(S.ranks[r].t)}`:""}</div></div>`;
+    const st=statusOf(i), [w,e]=topics[i-1], m=missOf(i);
+    const right = st.s==="win" ? `<span class="m">${medal(st.rank)}</span>${fmt(st.t)}`
+                : st.s==="give" ? `<span class="m">🏳️</span>ギブ` : "";
+    h+=`<div class="prow ${st.s==="win"?'won':''} ${st.s==="give"?'give':''}" data-p="${i}" role="button" tabindex="0">
+      <div class="pnum">${i}</div>${e?`<div class="pem">${e}</div>`:""}
+      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}<div class="ptopic">${esc(w)}${i===S.num?"・あなた":""}</div></div>
+      <div class="status">${right}</div></div>`;
   }
   $("b-list").innerHTML=h;
   document.querySelectorAll("#b-list .prow").forEach(row=>{
-    const p=+row.dataset.p; let t=null;
-    row.addEventListener("pointerdown",()=>{ t=setTimeout(()=>{ t=null; rename(p); },600); });
-    row.addEventListener("pointerup",()=>{ if(t){ clearTimeout(t); t=null; addRank(p); } });
-    row.addEventListener("pointerleave",()=>{ clearTimeout(t); t=null; });
-    row.addEventListener("contextmenu",ev=>ev.preventDefault());
+    const open=()=>openSheet(+row.dataset.p);
+    row.addEventListener("click",open);
+    row.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); open(); } });
   });
+
+  // ラウンド終了カード
+  const res=roundResults();
+  $("done-card").style.display = allDone() ? "block" : "none";
+  if(allDone()){
+    const order=[...res.filter(r=>r.s==="win").sort((a,b)=>a.rank-b.rank), ...res.filter(r=>r.s==="give")];
+    $("done-list").innerHTML = order.map(r=>`<div class="tot"><span>${r.s==="win"?medal(r.rank):"🏳️"}</span><b>${esc(r.name)}</b><span>${esc(r.topic)}・❌${r.miss}</span></div>`).join("");
+  }
+
+  // 総合ランキング（終わったラウンド＋今のラウンド）
+  const tot={};
+  const add=(name,pts,win)=>{ tot[name]=tot[name]||{pts:0,win:0}; tot[name].pts+=pts; if(win) tot[name].win++; };
+  S.history.forEach(r=>{ if(r.results) r.results.forEach(x=>add(x.name,x.pts,x.s==="win"&&x.rank===0)); });
+  res.forEach(x=>add(x.name,x.pts,x.s==="win"&&x.rank===0));
+  const list=Object.entries(tot).sort((a,b)=>b[1].pts-a[1].pts);
+  const any=list.some(([,v])=>v.pts>0);
+  $("total-card").style.display = any ? "block" : "none";
+  $("total").innerHTML = list.map(([name,v],k)=>`<div class="tot"><span>${k<3&&v.pts>0?MEDALS[k]:"　"}</span><b>${esc(name)}</b><span class="pt">${v.pts}</span><span>点</span></div>`).join("");
+
+  // これまでの結果
   $("hist-card").style.display = S.history.length ? "block" : "none";
-  $("hist").innerHTML = S.history.slice().reverse().map(r=>
-    `<div class="r"><b>ラウンド${r.round}</b><br>${ r.ranks.length
-      ? r.ranks.map((x,k)=>`${MEDALS[k]||(k+1)+"位"} ${esc(x.name)}（${esc(x.topic)}）`).join("<br>") : "記録なし"}</div>`).join("");
+  $("hist").innerHTML = S.history.slice().reverse().map(r=>{
+    const rows = r.results
+      ? [...r.results.filter(x=>x.s==="win").sort((a,b)=>a.rank-b.rank), ...r.results.filter(x=>x.s!=="win")]
+          .map(x=>`${x.s==="win"?medal(x.rank):x.s==="give"?"🏳️":"ー"} ${esc(x.name)}（${esc(x.topic)}）${x.miss?` ❌${x.miss}`:""}`)
+      : (r.ranks||[]).map((x,k)=>`${medal(k)} ${esc(x.name)}（${esc(x.topic)}）`);
+    return `<div class="r"><b>ラウンド${r.round}</b><br>${rows.length?rows.join("<br>"):"記録なし"}</div>`;
+  }).join("");
 }
-function addRank(p){
-  if(S.ranks.some(x=>x.p===p)) return;
-  S.ranks.push({p, t: Date.now()-(S.start||Date.now())});
-  save(); renderBoard(); confetti();
-  const n=countOf(S.code);
-  if(S.ranks.length===n-1) toast("のこり1人！");
-  else toast(`${nameOf(p)} ${S.ranks.length}位！`);
+
+// 判定シート（記録ボードで人をタップ）
+let sheetP=0;
+function openSheet(p){
+  sheetP=p; const st=statusOf(p), w=topicsFor(S.code,S.round)[p-1][0];
+  $("sh-title").textContent = `${p}番 ${nameOf(p)}`;
+  $("sh-sub").textContent = `お題：${w}・ハズレ${missOf(p)}回` + (st.s==="win" ? `・${medal(st.rank)}` : st.s==="give" ? "・ギブアップ" : "");
+  $("sheet").classList.add("on");
 }
-function undoRank(){ if(!S.ranks.length) return; S.ranks.pop(); save(); renderBoard(); }
+function sheetDo(kind){
+  const p=sheetP; $("sheet").classList.remove("on");
+  if(kind==="name"){ rename(p); return; }
+  const ok=setResult(p,kind);
+  if(!ok){ toast(kind==="miss" ? "決着ずみです" : "すでに記録されています"); return; }
+  renderBoard();
+  if(kind==="win"){ confetti(); toast(`${nameOf(p)} ${medal(statusOf(p).rank)}！`); }
+  else if(kind==="miss") toast(`${nameOf(p)} ハズレ${missOf(p)}回目`);
+  else if(kind==="give") toast(`${nameOf(p)} ギブアップ`);
+  else toast("取り消しました");
+  if(allDone() && kind!=="undo"){ setTimeout(()=>{ toast("ラウンド終了！"); window.scrollTo({top:0,behavior:"smooth"}); }, 900); }
+}
 function rename(p){
   ask({title:`${p}番の名前`, input:S.names[p]||"", ok:"決定",
     onOk:v=>{ S.names[p]=v.trim().slice(0,12); save(); renderBoard(); }});
 }
 function nextRound(){
-  ask({title:"次のラウンドへ", text:"全員で「もう一回」を押してね", ok:"もう一回", onOk:()=>{
-  const topics=topicsFor(S.code,S.round);
-  S.history.push({round:S.round+1, ranks:S.ranks.map(x=>({name:nameOf(x.p), topic:topics[x.p-1][0]}))});
-  S.round++; S.ranks=[]; S.start=null; save();
-  renderReady(); go("s-ready"); toast(`ラウンド${S.round+1} スタート`);
+  fix();
+  const left = roundResults().filter(r=>r.s==="play").length;
+  ask({title:`ラウンド${S.round+2}へ`, text: (left ? `まだ${left}人が決着していません。` : "") + "全員のスマホで「次のラウンドへ」を押してね", ok:"次のラウンドへ", onOk:()=>{
+    S.history.push({round:S.round+1, results:roundResults()});
+    S.round++; S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; save();
+    renderReady(); go("s-ready"); toast(`ラウンド${S.round+1} スタート`);
   }});
 }
 
