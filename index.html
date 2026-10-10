@@ -184,6 +184,28 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 #sheet .grid3 .btn .ic{display:block;font-size:24px}
 #sheet .btn.small{padding:10px;font-size:15px;margin:6px 0}
 
+/* ヒント */
+#fh-hintbtn{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 44px);left:12px;background:var(--yellow);border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:14px;cursor:pointer;display:none;font-family:inherit}
+#hint-ov{position:fixed;inset:0;z-index:13;background:var(--night);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#hint-ov.on{display:flex}
+#hint-ov .hbox{background:#fff;border:4px solid var(--ink);border-radius:22px;box-shadow:8px 8px 0 var(--ink);padding:18px 24px;margin:18px 0 22px;width:100%;max-width:360px}
+#hint-ov .hrow{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:2px dashed #E3DEF3;font-size:16px}
+#hint-ov .hrow:last-child{border:0}
+#hint-ov .hrow b{font-family:var(--display);font-weight:400;font-size:30px;text-align:right}
+#hint-ov .hrow{gap:12px}
+#hint-ov .btn{max-width:340px}
+.hint-used{display:inline-block;background:#FFF3C4;border-radius:999px;padding:0 8px;font-size:12px;margin-left:4px}
+
+/* ジャンル選び直し */
+#gpick{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:flex-end;justify-content:center;z-index:40}
+#gpick.on{display:flex}
+#gpick .card{width:100%;max-width:480px;margin:0;border-radius:24px 24px 0 0;padding:18px 16px max(18px,env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+#gpick h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 4px;text-align:center}
+#gpick p{text-align:center;color:var(--muted);margin:0 0 12px;font-size:14px}
+#gpick .genres{grid-template-columns:1fr 1fr 1fr;gap:8px}
+#gpick .gchip{padding:8px 4px;font-size:13px}
+#gpick .gchip .ge{font-size:26px}
+
 /* 確認ダイアログ */
 #dlg{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
 #dlg.on{display:flex}
@@ -222,7 +244,8 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
       <li>1人ずつ順番に質問。ほかの人は「はい」「いいえ」などで答える。</li>
       <li>わかったら答えを言う。画面を見ている人が「⭕正解」「❌ハズレ」を押してあげる。降参なら「🏳️ギブアップ」。</li>
       <li>結果は1台のスマホの「記録ボード」でまとめると、順位と総合ポイントが出せる。</li>
-      <li>全員で「次のラウンドへ」を押すと、次のお題が配られる（前と重なりません）。</li>
+      <li>行きづまったら「💡ヒント」。1ラウンドに1回だけ、文字数と最初の1文字がわかる。</li>
+      <li>全員で「次のラウンドへ」を押して、同じジャンルを選ぶと次のお題が配られる（前と重なりません）。「おまかせ」なら全員同じジャンルがランダムで決まる。</li>
     </ol>
   </details>
 </section>
@@ -288,6 +311,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
   </div>
   <p class="sub" style="margin-top:0">全員のラウンドがそろっているか確認してね</p>
   <button class="btn red" onclick="startForehead()">おでこにセット</button>
+  <button class="btn yellow" id="r-hint" onclick="useHint()">💡 ヒントを見る（1ラウンド1回）</button>
   <div class="row2">
     <button class="btn" onclick="openBoard()">記録ボード</button>
     <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
@@ -321,6 +345,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
   <div id="fh-count"></div>
   <div id="fh-card"><div id="fh-emoji"></div><div id="fh-word"></div></div>
   <button id="fh-back" onclick="toReady()">‹ もどる</button>
+  <button id="fh-hintbtn" onclick="useHint()">💡 ヒント</button>
   <div id="fh-miss"></div>
   <div id="fh-actions">
     <button class="btn red" onclick="judge('win')"><span class="ic">⭕</span>正解</button>
@@ -328,6 +353,12 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <button class="btn" onclick="judge('give')"><span class="ic">🏳️</span>ギブアップ</button>
   </div>
   <div id="fh-hint">ダブルタップで画面をかくす</div>
+</div>
+<div id="hint-ov" role="dialog" aria-modal="true">
+  <h2 class="telop" style="font-size:34px">💡 ヒント</h2>
+  <div class="hbox" id="hint-box"></div>
+  <button class="btn red" onclick="$('hint-ov').classList.remove('on');startForehead()">おでこにセット</button>
+  <button class="btn clear" onclick="$('hint-ov').classList.remove('on');toReady()">準備画面にもどる</button>
 </div>
 <div id="fh-result">
   <h2 class="telop big" id="fr-title"></h2>
@@ -358,6 +389,13 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <button class="btn small" onclick="sheetDo('name')">名前を変える</button>
   </div>
   <button class="btn clear" style="color:var(--muted);border-color:transparent" onclick="$('sheet').classList.remove('on')">閉じる</button>
+</div></div>
+<div id="gpick" role="dialog" aria-modal="true"><div class="card">
+  <h3 id="gp-title"></h3>
+  <p id="gp-sub"></p>
+  <div class="genres" id="gp-list"></div>
+  <button class="btn mint" style="margin-top:16px" onclick="confirmNextRound()">次のラウンドへ</button>
+  <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
 </div></div>
 <canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
@@ -463,11 +501,17 @@ function rng(seed){ let a=hash(seed); return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Ma
 function shuffled(list, seed){ const a=list.slice(), r=rng(seed);
   for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 // ラウンドごとに、全員に重ならないお題を配る（前のラウンドとも重ならない）
-function topicsFor(code, round){
-  const list=genreOf(code).topics, n=countOf(code), per=Math.floor(list.length/n);
-  const deck=shuffled(list, "odeko:"+code+":"+Math.floor(round/per)), slot=round%per;
+// gh = ラウンドごとのジャンル番号の配列（なければ部屋のジャンルのまま）
+function topicsFor(code, round, gh){
+  const g = gh && gh[round]!=null ? gh[round] : decode(code).g;
+  if(gh && gh[round]!=null) round = gh.slice(0,round).filter(x=>x===g).length;  // そのジャンルで遊んだ回数
+  const list=GENRES[g].topics, n=countOf(code), per=Math.floor(list.length/n);
+  const deck=shuffled(list, "odeko:"+code+":"+(g===decode(code).g?"":g+":")+Math.floor(round/per)), slot=round%per;
   return deck.slice(slot*n, slot*n+n);
 }
+
+// おまかせ（部屋番号とラウンドが同じなら全員同じジャンル）
+const randomGenre = (code, round) => hash("omakase:"+code+":"+round) % GENRES.length;
 
 // ===== 共通 =====
 const $ = id => document.getElementById(id);
@@ -476,6 +520,9 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function tiles(code){ return code.split("").map(d=>`<div class="tile">${d}</div>`).join(""); }
 const hasRoom = () => S.code && decode(S.code);
+function hist(){ S.gHist = S.gHist || []; while(S.gHist.length<=S.round) S.gHist.push(S.gHist.length ? S.gHist[S.gHist.length-1] : decode(S.code).g); return S.gHist; }
+const curGenre = () => GENRES[hist()[S.round]];
+const topicsNow = () => topicsFor(S.code, S.round, hist());
 
 // ===== 確認ダイアログ（ブラウザ標準のconfirmはLINEなどのアプリ内ブラウザで動かないため自作） =====
 function ask({title, text="", ok="OK", input=null, onOk}){
@@ -491,7 +538,7 @@ function ask({title, text="", ok="OK", input=null, onOk}){
 // ===== ホーム =====
 function renderHome(){
   $("resume").style.display = hasRoom() ? "flex" : "none";
-  if(hasRoom()) $("resume-info").textContent = `部屋 ${S.code}・${genreOf(S.code).name}・ラウンド${S.round+1}`;
+  if(hasRoom()) $("resume-info").textContent = `部屋 ${S.code}・${curGenre().name}・ラウンド${S.round+1}`;
 }
 function resume(){ renderReady(); go("s-ready"); }
 (function heroLoop(){
@@ -550,7 +597,8 @@ function leaveRoom(){
 
 // ===== 準備 =====
 function renderReady(){
-  const g=genreOf(S.code);
+  fix(); const g=curGenre();
+  $("r-hint").textContent = S.hint ? "💡 ヒントをもう一度見る" : "💡 ヒントを見る（1ラウンド1回）";
   $("r-tiles").innerHTML = tiles(S.code);
   $("r-genre").textContent = g.icon+" "+g.name; $("r-genre").style.setProperty("--gc", g.color);
   $("r-round").textContent = `ラウンド ${S.round+1}`;
@@ -569,10 +617,10 @@ function fitTopic(){
 async function keepAwake(){ try{ if("wakeLock" in navigator) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){} }
 function startForehead(){
   $("fh-cover").classList.remove("on");
-  const g=genreOf(S.code), [word,emoji]=topicsFor(S.code,S.round)[S.num-1];
+  const g=curGenre(), [word,emoji]=topicsNow()[S.num-1];
   const fh=$("forehead"); fh.style.setProperty("--gc", g.color);
   $("fh-genre").textContent = g.icon+" "+g.name;
-  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none";
+  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none"; $("fh-hintbtn").style.display="none";
   $("fh-result").classList.remove("on"); showMiss();
   fh.classList.add("on"); keepAwake();
   if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
@@ -586,12 +634,12 @@ function startForehead(){
     $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word;
     $("fh-card").classList.add("on"); fitTopic();
     $("fh-hint").style.display="block";
-    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hint").style.display="none"; } }, 3000);
+    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hintbtn").style.display="block"; $("fh-hint").style.display="none"; } }, 3000);
   },1000);
 }
 function closeForehead(){
   clearInterval(fhTimer);
-  $("forehead").classList.remove("on"); $("fh-cover").classList.remove("on"); $("fh-result").classList.remove("on");
+  $("forehead").classList.remove("on"); $("fh-cover").classList.remove("on"); $("fh-result").classList.remove("on"); $("hint-ov").classList.remove("on");
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
   try{ wakeLock && wakeLock.release(); }catch(e){}
 }
@@ -608,7 +656,7 @@ const nameOf = i => S.names[i] || `プレイヤー${i}`;
 const MEDALS = ["🥇","🥈","🥉"];
 const medal = k => MEDALS[k] || `${k+1}位`;
 function fmt(ms){ const s=Math.round(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
-function fix(){ S.ranks=S.ranks||[]; S.gave=S.gave||[]; S.miss=S.miss||{}; S.history=S.history||[]; S.names=S.names||{}; }
+function fix(){ S.hint=!!S.hint; S.ranks=S.ranks||[]; S.gave=S.gave||[]; S.miss=S.miss||{}; S.history=S.history||[]; S.names=S.names||{}; }
 function statusOf(p){
   const r=S.ranks.findIndex(x=>x.p===p);
   if(r>=0) return {s:"win", rank:r, t:S.ranks[r].t};
@@ -620,7 +668,7 @@ const allDone = () => { for(let i=1;i<=countOf(S.code);i++) if(statusOf(i).s==="
 
 // ラウンドの結果（順位・ポイント）
 function roundResults(){
-  const n=countOf(S.code), topics=topicsFor(S.code,S.round);
+  const n=countOf(S.code), topics=topicsNow();
   return Array.from({length:n},(_,k)=>{ const p=k+1, st=statusOf(p);
     return {p, name:nameOf(p), topic:topics[k][0], s:st.s, rank:st.rank, t:st.t, miss:missOf(p), pts: st.s==="win" ? n-st.rank : 0}; });
 }
@@ -637,7 +685,7 @@ function setResult(p, kind){
 }
 function showMiss(){ fix(); const m=missOf(S.num), el=$("fh-miss"); el.style.display = m ? "block" : "none"; el.textContent=`❌ × ${m}`; }
 function judge(kind){
-  const p=S.num, topic=topicsFor(S.code,S.round)[p-1];
+  const p=S.num, topic=topicsNow()[p-1];
   if(kind==="miss"){
     if(!setResult(p,"miss")) return;
     showMiss(); const c=$("fh-card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
@@ -656,10 +704,34 @@ function judge(kind){
     }});
 }
 
+// ヒント（1ラウンド1回。お題は見せずにヒントだけ表示）
+function hintFor(word){
+  if(/^\d+$/.test(word)){
+    const v=+word;
+    return [["ケタ数", `${word.length}ケタ`], ["偶数・奇数", v%2 ? "奇数" : "偶数"]];
+  }
+  const chars=Array.from(word).filter(c=>!/[・\s　]/.test(c));
+  if(chars.length<=2) return [["文字数", `${chars.length}文字`], ["最初の1文字", "短いお題なのでナシ"]];  // 「犬」などは答えになってしまうため
+  return [["文字数", `${chars.length}文字`], ["最初の1文字", `「${chars[0]}」`]];
+}
+function useHint(){
+  fix();
+  const show=()=>{
+    clearInterval(fhTimer);
+    const [word]=topicsNow()[S.num-1];
+    $("hint-box").innerHTML = hintFor(word).map(([k,v])=>`<div class="hrow"><span>${k}</span><b>${esc(v)}</b></div>`).join("");
+    $("hint-ov").classList.add("on");
+  };
+  if(S.hint){ show(); return; }
+  ask({title:"ヒントを使いますか？", text:"1ラウンドに1回だけ。記録ボードに💡がつきます", ok:"使う", onOk:()=>{
+    S.hint=true; S.hintUsed=S.hintUsed||{}; S.hintUsed[S.num]=true; save(); renderReady(); show();
+  }});
+}
+
 function openBoard(){ closeForehead(); fix(); renderBoard(); go("s-board"); }
 function renderBoard(){
   fix();
-  const n=countOf(S.code), topics=topicsFor(S.code,S.round);
+  const n=countOf(S.code), topics=topicsNow();
   $("b-round").textContent = `ラウンド ${S.round+1}`;
   let h="";
   for(let i=1;i<=n;i++){
@@ -668,7 +740,7 @@ function renderBoard(){
                 : st.s==="give" ? `<span class="m">🏳️</span>ギブ` : "";
     h+=`<div class="prow ${st.s==="win"?'won':''} ${st.s==="give"?'give':''}" data-p="${i}" role="button" tabindex="0">
       <div class="pnum">${i}</div>${e?`<div class="pem">${e}</div>`:""}
-      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}<div class="ptopic">${esc(w)}${i===S.num?"・あなた":""}</div></div>
+      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}${S.hintUsed&&S.hintUsed[i]?`<span class="hint-used">💡</span>`:""}<div class="ptopic">${esc(w)}${i===S.num?"・あなた":""}</div></div>
       <div class="status">${right}</div></div>`;
   }
   $("b-list").innerHTML=h;
@@ -703,14 +775,14 @@ function renderBoard(){
       ? [...r.results.filter(x=>x.s==="win").sort((a,b)=>a.rank-b.rank), ...r.results.filter(x=>x.s!=="win")]
           .map(x=>`${x.s==="win"?medal(x.rank):x.s==="give"?"🏳️":"ー"} ${esc(x.name)}（${esc(x.topic)}）${x.miss?` ❌${x.miss}`:""}`)
       : (r.ranks||[]).map((x,k)=>`${medal(k)} ${esc(x.name)}（${esc(x.topic)}）`);
-    return `<div class="r"><b>ラウンド${r.round}</b><br>${rows.length?rows.join("<br>"):"記録なし"}</div>`;
+    return `<div class="r"><b>ラウンド${r.round}</b>${r.genre?`（${esc(r.genre)}）`:""}<br>${rows.length?rows.join("<br>"):"記録なし"}</div>`;
   }).join("");
 }
 
 // 判定シート（記録ボードで人をタップ）
 let sheetP=0;
 function openSheet(p){
-  sheetP=p; const st=statusOf(p), w=topicsFor(S.code,S.round)[p-1][0];
+  sheetP=p; const st=statusOf(p), w=topicsNow()[p-1][0];
   $("sh-title").textContent = `${p}番 ${nameOf(p)}`;
   $("sh-sub").textContent = `お題：${w}・ハズレ${missOf(p)}回` + (st.s==="win" ? `・${medal(st.rank)}` : st.s==="give" ? "・ギブアップ" : "");
   $("sheet").classList.add("on");
@@ -731,14 +803,28 @@ function rename(p){
   ask({title:`${p}番の名前`, input:S.names[p]||"", ok:"決定",
     onOk:v=>{ S.names[p]=v.trim().slice(0,12); save(); renderBoard(); }});
 }
+let gpSel=0;
 function nextRound(){
   fix();
   const left = roundResults().filter(r=>r.s==="play").length;
-  ask({title:`ラウンド${S.round+2}へ`, text: (left ? `まだ${left}人が決着していません。` : "") + "全員のスマホで「次のラウンドへ」を押してね", ok:"次のラウンドへ", onOk:()=>{
-    S.history.push({round:S.round+1, results:roundResults()});
-    S.round++; S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; save();
-    renderReady(); go("s-ready"); toast(`ラウンド${S.round+1} スタート`);
-  }});
+  gpSel = hist()[S.round];
+  $("gp-title").textContent = `ラウンド${S.round+2}のジャンル`;
+  $("gp-sub").textContent = (left ? `まだ${left}人が決着していません。` : "") + "全員のスマホで同じジャンルを選んでね";
+  renderGpick(); $("gpick").classList.add("on");
+}
+function renderGpick(){
+  $("gp-list").innerHTML = GENRES.map((g,i)=>
+    `<div class="gchip ${i===gpSel?'sel':''}" style="--gc:${g.color}" onclick="gpSel=${i};renderGpick()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("")
+    + `<div class="gchip ${gpSel===-1?'sel':''}" style="--gc:#FFD23F" onclick="gpSel=-1;renderGpick()"><span class="ge">🎲</span>おまかせ</div>`;
+}
+function confirmNextRound(){
+  $("gpick").classList.remove("on");
+  const g = gpSel===-1 ? randomGenre(S.code, S.round+1) : gpSel;
+  S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
+  hist(); S.round++; S.gHist[S.round]=g;
+  S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; save();
+  renderReady(); go("s-ready");
+  toast(`ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}`);
 }
 
 // ===== 紙吹雪 =====
