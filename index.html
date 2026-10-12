@@ -34,7 +34,7 @@ body{
 button{font-family:inherit}
 :focus-visible{outline:4px solid var(--yellow);outline-offset:3px}
 
-.screen{display:none;min-height:100vh;padding:20px 16px 48px;max-width:480px;margin:0 auto}
+.screen{display:none;min-height:100vh;padding:calc(env(safe-area-inset-top) + 16px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 48px) calc(env(safe-area-inset-left) + 16px);max-width:480px;margin:0 auto}
 .screen.on{display:block}
 
 /* テロップ風見出し */
@@ -61,8 +61,9 @@ h2.telop{font-size:28px;margin:6px 0 18px}
 .btn:disabled{opacity:.45;transform:none;box-shadow:0 6px 0 var(--ink)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row2 .btn{margin:6px 0}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .link{background:none;border:0;color:#fff;font-size:15px;font-weight:800;padding:8px 4px;cursor:pointer;opacity:.9}
+.topbar button.link{min-height:44px;padding:8px 16px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);border-radius:999px;opacity:1}
 
 /* ホームのおでこ札 */
 .hero{display:flex;justify-content:center;margin:26px 0 8px}
@@ -149,7 +150,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 .hist .r{padding:8px 0;border-bottom:2px dashed #E3DEF3}
 .hist .r:last-child{border:0}
 
-.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--yellow);border:3px solid var(--ink);color:var(--ink);
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 28px);transform:translateX(-50%);background:var(--yellow);border:3px solid var(--ink);color:var(--ink);
   padding:10px 20px;border-radius:999px;font-size:15px;font-weight:800;opacity:0;transition:.25s;pointer-events:none;z-index:30;white-space:nowrap}
 .toast.on{opacity:1}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:25}
