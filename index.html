@@ -213,6 +213,20 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 #gpick .gchip{padding:8px 4px;font-size:13px}
 #gpick .gchip .ge{font-size:26px}
 
+/* 通信あり／なし */
+#mode-switch{display:grid;grid-template-columns:1fr 1fr;background:var(--night2);border:3px solid var(--ink);border-radius:999px;padding:4px;gap:4px;margin:0 0 6px}
+#mode-switch button{border:0;border-radius:999px;padding:9px 6px;font-weight:800;font-size:15px;background:transparent;color:#fff;cursor:pointer;font-family:inherit}
+#mode-switch button.sel{background:var(--yellow);color:var(--ink)}
+#mode-switch button:disabled{opacity:.4}
+#mode-note{color:#fff;opacity:.8;font-size:13px;text-align:center;margin:0 0 6px;min-height:18px;font-weight:500}
+input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;padding:12px;border:3px solid var(--ink);border-radius:14px;background:#FFF8DA;color:var(--ink)}
+.lrow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:2px dashed #E3DEF3;font-size:17px}
+.lrow:last-child{border:0}
+.lrow b{flex:1}
+.you-name{display:block;font-family:var(--body);font-size:18px;font-weight:800;margin-top:6px}
+#r-net{font-size:13px;padding:2px 10px}
+.btn:disabled{cursor:not-allowed}
+
 /* 確認ダイアログ */
 #dlg{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
 #dlg.on{display:flex}
@@ -239,20 +253,26 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <button class="btn red" onclick="resume()">もどる</button>
   </div>
 
-  <button class="btn red" onclick="go('s-create')">部屋を作る</button>
-  <button class="btn yellow" onclick="openJoin('')">番号で参加する</button>
+  <div id="mode-switch" role="group" aria-label="遊び方">
+    <button data-m="online" onclick="setMode('online')">通信あり</button>
+    <button data-m="offline" onclick="setMode('offline')">通信なし</button>
+  </div>
+  <p id="mode-note"></p>
+  <button class="btn red" onclick="startCreate()">部屋を作る</button>
+  <button class="btn yellow" onclick="startJoin()">番号で参加する</button>
 
   <details>
     <summary>あそびかた</summary>
     <ol>
-      <li>1人が「部屋を作る」でジャンルと人数を決めて、4ケタの部屋番号をみんなに伝える。</li>
-      <li>全員が同じ部屋番号を入れて、自分の番号を選ぶ（ほかの人と重ならないように）。</li>
+      <li>1人が「部屋を作る」で部屋を作り、4ケタの部屋番号（または招待リンク）をみんなに伝える。</li>
+      <li>みんなは「番号で参加する」で部屋番号と名前を入れる。全員そろったら「スタート」。番号は自動で決まります。</li>
       <li>「おでこにセット」を押して、3秒以内に画面を外向きにしておでこへ。</li>
       <li>1人ずつ順番に質問。ほかの人は「はい」「いいえ」などで答える。</li>
       <li>わかったら答えを言う。画面を見ている人が「⭕正解」「❌ハズレ」を押してあげる。降参なら「🏳️ギブアップ」。</li>
-      <li>結果は1台のスマホの「記録ボード」でまとめると、順位と総合ポイントが出せる。</li>
+      <li>「記録ボード」で順位と総合ポイントが見られる。通信ありなら全員のスマホに同じ結果が出ます。</li>
       <li>行きづまったら「💡ヒント」。1ラウンドに1回だけ、文字数と最初の1文字がわかる。</li>
       <li>全員で「次のラウンドへ」を押して、同じジャンルを選ぶと次のお題が配られる（前と重なりません）。「おまかせ」なら全員同じジャンルがランダムで決まる。</li>
+      <li>電波がないときは「通信なし」に切り替え。部屋を作る人が人数を決め、番号は各自で選び、記録は1台でまとめます。</li>
     </ol>
   </details>
 </section>
@@ -265,11 +285,15 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <p class="label">ジャンル</p>
     <div class="genres" id="genre-list"></div>
   </div>
-  <div class="card">
+  <div class="card" id="count-card">
     <p class="label">人数</p>
     <div class="nums" id="count-list"></div>
   </div>
-  <button class="btn red" onclick="createRoom()">部屋番号を作る</button>
+  <div class="card" id="cname-card" style="display:none">
+    <p class="label">あなたの名前</p>
+    <input class="namein" id="cname-in" maxlength="12" autocomplete="nickname" placeholder="なまえ">
+  </div>
+  <button class="btn red" id="create-btn" onclick="createRoom()">部屋番号を作る</button>
 </section>
 
 <!-- 参加 -->
@@ -291,11 +315,39 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
       <p class="msg" id="code-msg"></p>
     </div>
   </div>
+  <div class="card" id="jname-card" style="display:none">
+    <p class="label">あなたの名前</p>
+    <input class="namein" id="jname-in" maxlength="12" autocomplete="nickname" placeholder="なまえ">
+  </div>
   <div class="card" id="num-card" style="display:none">
     <p class="label">自分の番号（ほかの人と重ならないように）</p>
     <div class="nums" id="num-list"></div>
   </div>
   <button class="btn red" id="join-btn" onclick="joinRoom()" disabled>はじめる</button>
+</section>
+
+<!-- 待合室（通信あり） -->
+<section class="screen" id="s-lobby">
+  <div class="topbar">
+    <button class="link" onclick="go('s-home');renderHome()">‹ ホーム</button>
+    <button class="link" onclick="leaveRoom()">部屋を出る</button>
+  </div>
+  <h2 class="telop">待合室</h2>
+  <div class="card stage">
+    <p class="label">部屋番号</p>
+    <div class="tiles" id="l-tiles"></div>
+    <div class="badges"><span class="badge g" id="l-genre"></span></div>
+    <div class="row2" style="margin-top:8px">
+      <button class="btn" onclick="shareRoom()">招待する</button>
+      <button class="btn" onclick="changeLobbyGenre()">ジャンル変更</button>
+    </div>
+  </div>
+  <div class="card">
+    <p class="label" id="l-count"></p>
+    <div id="l-list"></div>
+  </div>
+  <button class="btn red" id="l-start" onclick="startGame()" disabled>スタート</button>
+  <p class="sub" style="margin-top:0">だれが押してもスタートできます。途中から来た人は次のラウンドから参加できます</p>
 </section>
 
 <!-- 準備 -->
@@ -310,14 +362,15 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <div class="badges">
       <span class="badge g" id="r-genre"></span>
       <span class="badge" id="r-round"></span>
+      <span class="badge" id="r-net" style="display:none"></span>
     </div>
   </div>
   <div class="card stage">
     <p class="label">あなたは</p>
     <div class="you" id="r-num"></div>
   </div>
-  <p class="sub" style="margin-top:0">全員のラウンドがそろっているか確認してね</p>
-  <button class="btn red" onclick="startForehead()">おでこにセット</button>
+  <p class="sub" style="margin-top:0" id="r-note">全員のラウンドがそろっているか確認してね</p>
+  <button class="btn red" id="r-start" onclick="startForehead()">おでこにセット</button>
   <button class="btn yellow" id="r-hint" onclick="useHint()">💡 ヒントを見る（1ラウンド1回）</button>
   <div class="row2">
     <button class="btn" onclick="openBoard()">記録ボード</button>
@@ -333,7 +386,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
     <h3>ラウンド終了！</h3>
     <div id="done-list"></div>
   </div>
-  <p class="hint">人をタップして「正解」「ハズレ」「ギブアップ」を記録。名前もここで変えられます。</p>
+  <p class="hint" id="b-hint">人をタップして「正解」「ハズレ」「ギブアップ」を記録。名前もここで変えられます。</p>
   <div id="b-list"></div>
   <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
   <div class="card" id="total-card" style="display:none;margin-top:16px">
@@ -401,7 +454,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
   <h3 id="gp-title"></h3>
   <p id="gp-sub"></p>
   <div class="genres" id="gp-list"></div>
-  <button class="btn mint" style="margin-top:16px" onclick="confirmNextRound()">次のラウンドへ</button>
+  <button class="btn mint" style="margin-top:16px" id="gp-ok" onclick="confirmNextRound()">次のラウンドへ</button>
   <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
 </div></div>
 <canvas id="confetti"></canvas>
@@ -483,14 +536,55 @@ const GENRES = [
 const COMBOS = GENRES.length * 7;                 // ジャンル × 人数(2〜8)
 const MAXSEED = Math.floor(10000 / COMBOS);       // 4ケタに収まる部屋の数
 
+// ===== 通信（Firebase Realtime Database） =====
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyARjb_t0hEpQKM_6Wmbzl_H7z-e7rMcKjY",
+  authDomain: "odeko-ddb38.firebaseapp.com",
+  databaseURL: "https://odeko-ddb38-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "odeko-ddb38",
+  storageBucket: "odeko-ddb38.firebasestorage.app",
+  messagingSenderId: "310865503380",
+  appId: "1:310865503380:web:fb1c2b173cb6fbee70c081"
+};
+const FIREBASE_VER = "10.12.2";
+let NET = null;          // 通信の窓口（つながらないときは null）
+let netOK = false;       // いま通信できているか
+function loadScript(src){ return new Promise((ok,ng)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=ng; document.head.appendChild(s); }); }
+function firebaseNet(){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db=firebase.database();
+  let offset=0; db.ref(".info/serverTimeOffset").on("value", s=>{ offset=s.val()||0; });
+  return {
+    on(path, cb){ const r=db.ref(path), h=s=>cb(s.val()); r.on("value", h); return ()=>r.off("value", h); },
+    get(path){ return db.ref(path).once("value").then(s=>s.val()); },
+    set(path, v){ return db.ref(path).set(v); },
+    remove(path){ return db.ref(path).remove(); },
+    tx(path, fn){ return db.ref(path).transaction(fn).then(r=>({committed:r.committed, val:r.snapshot.val()})); },
+    now(){ return Date.now()+offset; },
+    onConnected(cb){ db.ref(".info/connected").on("value", s=>cb(!!s.val())); }
+  };
+}
+function initNet(){
+  if(window.NET_OVERRIDE){ NET=window.NET_OVERRIDE; return Promise.resolve(true); }   // テスト用
+  const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
+  const timeout=new Promise((_,ng)=>setTimeout(()=>ng("timeout"), 10000));
+  return Promise.race([loadScript(base+"firebase-app-compat.js").then(()=>loadScript(base+"firebase-database-compat.js")), timeout])
+    .then(()=>{ NET=firebaseNet(); return true; })
+    .catch(()=>{ NET=null; return false; });
+}
+
 // ===== 状態 =====
 let S = load() || {};
+let MODE = "online";                 // online=通信あり / offline=通信なし
 let pickGenre = 0, pickCount = 4, pickNum = 0;
 let fhTimer = null, wakeLock = null, lastTap = 0;
-function save(){ try{ localStorage.setItem("odeko2", JSON.stringify(S)); }catch(e){} }
+function save(){ try{ const {raw, ...rest}=S; localStorage.setItem("odeko2", JSON.stringify(rest)); }catch(e){} }
 function load(){ try{ return JSON.parse(localStorage.getItem("odeko2")); }catch(e){ return null; } }
+const PID = (()=>{ try{ let p=localStorage.getItem("odeko_pid"); if(!p){ p=Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem("odeko_pid",p); } return p; }catch(e){ return "p"+Math.random().toString(36).slice(2); } })();
+function myName(){ try{ return localStorage.getItem("odeko_name")||""; }catch(e){ return ""; } }
+function saveName(v){ try{ localStorage.setItem("odeko_name", v); }catch(e){} }
 
-// ===== 部屋番号（4ケタにジャンルと人数を埋め込む） =====
+// ===== 部屋番号（通信なしモード：4ケタにジャンルと人数を埋め込む） =====
 function makeCode(g, n){ const seed=Math.floor(Math.random()*MAXSEED); return String(seed*COMBOS + g*7 + (n-2)).padStart(4,"0"); }
 function decode(code){
   if(!/^\d{4}$/.test(code)) return null;
@@ -500,14 +594,14 @@ function decode(code){
 const genreOf = code => GENRES[decode(code).g];
 const countOf = code => decode(code).n;
 
-// ===== 乱数（同じ部屋番号なら全員同じ配り方になる） =====
+// ===== 乱数（同じ部屋なら全員同じ配り方になる） =====
 function hash(str){ let h1=0xdeadbeef^str.length,h2=0x41c6ce57^str.length;
   for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
   h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); return h1>>>0; }
 function rng(seed){ let a=hash(seed); return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}; }
 function shuffled(list, seed){ const a=list.slice(), r=rng(seed);
   for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-// ラウンドごとに、全員に重ならないお題を配る（前のラウンドとも重ならない）
+// 通信なし：ラウンドごとに、全員に重ならないお題を配る（前のラウンドとも重ならない）
 // gh = ラウンドごとのジャンル番号の配列（なければ部屋のジャンルのまま）
 function topicsFor(code, round, gh){
   const g = gh && gh[round]!=null ? gh[round] : decode(code).g;
@@ -516,20 +610,36 @@ function topicsFor(code, round, gh){
   const deck=shuffled(list, "odeko:"+code+":"+(g===decode(code).g?"":g+":")+Math.floor(round/per)), slot=round%per;
   return deck.slice(slot*n, slot*n+n);
 }
+// 通信あり：ラウンドごとに人数が変わってもOKな配り方（gh=ジャンル, nh=人数）
+function topicsOnline(seed, gh, nh, round){
+  const g=gh[round], list=GENRES[g].topics, L=list.length; let pos=0, cyc=0;
+  const fit=n=>{ if(pos+n>L){ cyc++; pos=0; } };
+  for(let r=0;r<round;r++) if(gh[r]===g){ fit(nh[r]||0); pos+=nh[r]||0; }
+  const n=nh[round]||0; fit(n);
+  return shuffled(list, "on:"+seed+":"+g+":"+cyc).slice(pos, pos+n);
+}
 
 // おまかせ（部屋番号とラウンドが同じなら全員同じジャンル）
 const randomGenre = (code, round) => hash("omakase:"+code+":"+round) % GENRES.length;
 
 // ===== 共通 =====
 const $ = id => document.getElementById(id);
+const onScreen = id => $(id).classList.contains("on");
 function go(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on", s.id===id)); window.scrollTo(0,0); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),1800); }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function tiles(code){ return code.split("").map(d=>`<div class="tile">${d}</div>`).join(""); }
-const hasRoom = () => S.code && decode(S.code);
-function hist(){ S.gHist = S.gHist || []; while(S.gHist.length<=S.round) S.gHist.push(S.gHist.length ? S.gHist[S.gHist.length-1] : decode(S.code).g); return S.gHist; }
+const hasRoom = () => !!(S.code && (S.online ? true : decode(S.code)));
+const nP = () => S.online ? (S.nh && S.nh[S.round] || 0) : countOf(S.code);      // このラウンドの人数
+const isWatcher = () => S.online && S.num > nP();                                  // 途中参加で次のラウンド待ち
+function hist(){
+  if(S.online) return S.gh;
+  S.gHist = S.gHist || []; while(S.gHist.length<=S.round) S.gHist.push(S.gHist.length ? S.gHist[S.gHist.length-1] : decode(S.code).g); return S.gHist;
+}
 const curGenre = () => GENRES[hist()[S.round]];
-const topicsNow = () => topicsFor(S.code, S.round, hist());
+const topicsAt = r => S.online ? topicsOnline(S.seed, S.gh, S.nh, r) : topicsFor(S.code, r, hist());
+const topicsNow = () => topicsAt(S.round);
+const now = () => S.online && NET ? NET.now() : Date.now();
 
 // ===== 確認ダイアログ（ブラウザ標準のconfirmはLINEなどのアプリ内ブラウザで動かないため自作） =====
 function ask({title, text="", ok="OK", input=null, onOk}){
@@ -543,16 +653,34 @@ function ask({title, text="", ok="OK", input=null, onOk}){
 }
 
 // ===== ホーム =====
+function setMode(m){
+  if(m==="online" && !NET){ toast("いまは通信できません"); m="offline"; }
+  MODE=m;
+  document.querySelectorAll("#mode-switch button").forEach(b=>b.classList.toggle("sel", b.dataset.m===MODE));
+  $("mode-note").textContent = MODE==="online"
+    ? "全員のスマホがつながって、番号・記録・ラウンドが自動でそろいます"
+    : "電波がないとき用。番号は各自で選び、記録は1台でまとめます";
+}
 function renderHome(){
   $("resume").style.display = hasRoom() ? "flex" : "none";
-  if(hasRoom()) $("resume-info").textContent = `部屋 ${S.code}・${curGenre().name}・ラウンド${S.round+1}`;
+  if(hasRoom()) $("resume-info").textContent = S.online
+    ? `部屋 ${S.code}・通信あり${S.round!=null && S.phase==="play" ? `・ラウンド${S.round+1}` : ""}`
+    : `部屋 ${S.code}・${curGenre().name}・ラウンド${S.round+1}`;
 }
-function resume(){ renderReady(); go("s-ready"); }
+function resume(){
+  if(S.online){
+    if(!NET){ toast("いまは通信できません"); return; }
+    renderLobbyLoading(); go("s-lobby"); subscribe(S.code); return;
+  }
+  renderReady(); go("s-ready");
+}
+function startCreate(){ renderCreate(); go("s-create"); }
+function startJoin(){ openJoin("", false); }
 (function heroLoop(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const pool=GENRES.flatMap(g=>g.topics); const f=$("fuda");
+  const pool=GENRES.flatMap(g=>g.topics).filter(t=>t[1]); const f=$("fuda");
   setInterval(()=>{
-    if(!$("s-home").classList.contains("on")) return;
+    if(!onScreen("s-home")) return;
     const [w,e]=pool[Math.floor(Math.random()*pool.length)];
     f.classList.remove("flip"); void f.offsetWidth; f.classList.add("flip");
     setTimeout(()=>{ $("fuda-em").textContent=e; $("fuda-wd").textContent=w; },250);
@@ -565,22 +693,55 @@ function renderCreate(){
     `<div class="gchip ${i===pickGenre?'sel':''}" style="--gc:${g.color}" onclick="pickGenre=${i};renderCreate()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("");
   let h=""; for(let n=2;n<=8;n++) h+=`<div class="nchip ${n===pickCount?'sel':''}" onclick="pickCount=${n};renderCreate()">${n}<small>人</small></div>`;
   $("count-list").innerHTML = h;
+  const on = MODE==="online";
+  $("count-card").style.display = on ? "none" : "block";
+  $("cname-card").style.display = on ? "block" : "none";
+  if(on && !$("cname-in").value) $("cname-in").value = myName();
+  $("create-btn").textContent = on ? "部屋を作る" : "部屋番号を作る";
 }
-function createRoom(){ openJoin(makeCode(pickGenre,pickCount), true); }
+function createRoom(){
+  if(MODE==="online") return createOnline();
+  openJoin(makeCode(pickGenre,pickCount), true);
+}
 
 // ===== 参加 =====
+let codeCheck=0, joinRoomInfo=null;
 function openJoin(code, created){
   pickNum = 0;
   $("join-created").style.display = created ? "block" : "none";
   $("join-input").style.display = created ? "none" : "block";
   if(created){ $("created-tiles").innerHTML = tiles(code); $("created-desc").textContent = `${genreOf(code).name}・${countOf(code)}人`; }
   $("code-in").value = code;
+  $("jname-card").style.display = MODE==="online" ? "block" : "none";
+  if(MODE==="online" && !$("jname-in").value) $("jname-in").value = myName();
   onCodeInput(); go("s-join");
-  if(!created) setTimeout(()=>$("code-in").focus(),100);
+  if(!created && !code) setTimeout(()=>$("code-in").focus(),100);
 }
 function onCodeInput(){
   const el=$("code-in"); el.value=el.value.replace(/\D/g,"").slice(0,4);
-  const code=el.value, d=decode(code), m=$("code-msg");
+  const code=el.value, m=$("code-msg");
+  if(MODE==="online"){
+    $("num-card").style.display="none";
+    joinRoomInfo=null; m.className="msg"; m.textContent = "";
+    if(code.length===4 && NET){
+      const my=++codeCheck; m.textContent="さがしています…";
+      NET.get(`rooms/${code}`).then(room=>{
+        if(my!==codeCheck) return;
+        if(!room || !room.players){ m.className="msg ng"; m.textContent="その番号の部屋はありません"; joinRoomInfo=null; }
+        else {
+          const ps=Object.values(room.players).filter(Boolean), st=room.state||{}, g=GENRES[(st.gh&&st.gh.r0!=null)?st.gh.r0:room.baseG]||GENRES[0];
+          const mine = !!room.players[PID];
+          joinRoomInfo={code, full: ps.length>=8 && !mine};
+          m.className = "msg " + (joinRoomInfo.full ? "ng" : "ok");
+          m.textContent = joinRoomInfo.full ? "満員です（8人まで）"
+            : `${g.icon} ${g.name}の部屋・${ps.length}人参加中` + (st.phase==="play" && !mine ? "（ゲーム中なので次のラウンドから参加）" : "");
+        }
+        updateJoinBtn();
+      }).catch(()=>{ if(my===codeCheck){ m.className="msg ng"; m.textContent="通信できませんでした"; } });
+    }
+    updateJoinBtn(); return;
+  }
+  const d=decode(code);
   m.className = "msg " + (d ? "ok" : "ng");
   m.textContent = d ? `${GENRES[d.g].name}・${d.n}人の部屋` : (code.length===4 ? "その番号の部屋はありません" : "");
   $("num-card").style.display = d ? "block" : "none";
@@ -591,25 +752,191 @@ function onCodeInput(){
   }
   $("join-btn").disabled = !(d && pickNum>0);
 }
+function updateJoinBtn(){
+  if(MODE!=="online") return;
+  $("join-btn").disabled = !(joinRoomInfo && !joinRoomInfo.full && $("jname-in").value.trim());
+}
 function joinRoom(){
+  if(MODE==="online") return joinOnline($("code-in").value, $("jname-in").value.trim().slice(0,12));
   const code=$("code-in").value;
-  if(S.code===code && S.num===pickNum){ resume(); return; }   // 同じ部屋ならそのまま続き
+  if(S.code===code && S.num===pickNum && !S.online){ resume(); return; }   // 同じ部屋ならそのまま続き
+  if(unsub){ unsub(); unsub=null; }
   S = {code, num:pickNum, round:0, ranks:[], names:{}, history:[], start:null};
   save(); resume();
 }
 function leaveRoom(){
-  ask({title:"部屋を出ますか？", text:"この部屋の記録は消えます", ok:"部屋を出る",
-    onOk:()=>{ S={}; save(); renderHome(); go("s-home"); toast("部屋を出ました"); }});
+  const lobby = S.online && S.phase==="lobby";
+  ask({title:"部屋を出ますか？", text: S.online ? (lobby ? "部屋から抜けます" : "このスマホは部屋から抜けます（部屋の記録は残ります）") : "この部屋の記録は消えます", ok:"部屋を出る",
+    onOk:()=>{
+      if(S.online){ const code=S.code; if(unsub){ unsub(); unsub=null; } if(lobby && NET) NET.remove(`rooms/${code}/players/${PID}`); }
+      S={}; save(); renderHome(); go("s-home"); toast("部屋を出ました");
+    }});
 }
+
+// ===== 通信あり：部屋の作成・参加・同期 =====
+let unsub=null, lastRound=null, lastPhase=null, myPrev=null;
+async function createOnline(){
+  const name=$("cname-in").value.trim().slice(0,12);
+  if(!name){ toast("名前を入れてね"); $("cname-in").focus(); return; }
+  if(!NET){ toast("いまは通信できません"); return; }
+  saveName(name); $("create-btn").disabled=true;
+  try{
+    for(let i=0;i<10;i++){
+      const code=String(1000+Math.floor(Math.random()*9000));
+      await NET.get(`rooms/${code}`);
+      const t=NET.now();
+      const res=await NET.tx(`rooms/${code}`, room=>{
+        if(room && room.created && t-room.created < 12*3600*1000) return;   // 使用中の番号はとばす
+        return {code, created:t, baseG:pickGenre, players:{[PID]:{name, num:1}}, state:{phase:"lobby", round:0, gh:{r0:pickGenre}}};
+      });
+      if(res.committed){ enterOnline(code); return; }
+    }
+    toast("部屋を作れませんでした。もう一度試してね");
+  }catch(e){ toast("通信できませんでした"); }
+  finally{ $("create-btn").disabled=false; }
+}
+async function joinOnline(code, name){
+  if(!name){ toast("名前を入れてね"); return; }
+  if(!NET){ toast("いまは通信できません"); return; }
+  saveName(name); $("join-btn").disabled=true;
+  try{
+    const room0=await NET.get(`rooms/${code}`);
+    if(!room0 || !room0.players){ toast("その番号の部屋はありません"); return; }
+    let full=false;
+    const res=await NET.tx(`rooms/${code}`, room=>{
+      if(!room) return room;
+      full=false;
+      room.players=room.players||{};
+      if(room.players[PID]){ room.players[PID].name=name; return room; }   // 入り直し
+      const ps=Object.values(room.players).filter(Boolean);
+      if(ps.length>=8){ full=true; return; }
+      const used=new Set(ps.map(p=>p.num)); let num=1; while(used.has(num)) num++;
+      room.players[PID]={name, num};
+      return room;
+    });
+    if(!res.committed || !res.val){ toast(full ? "満員です（8人まで）" : "参加できませんでした"); return; }
+    enterOnline(code);
+  }catch(e){ toast("通信できませんでした"); }
+  finally{ updateJoinBtn(); }
+}
+function enterOnline(code){
+  S={online:true, code}; save();
+  renderLobbyLoading(); go("s-lobby"); subscribe(code);
+}
+function subscribe(code){
+  if(unsub) unsub();
+  lastRound=null; lastPhase=null; myPrev=null;
+  unsub=NET.on(`rooms/${code}`, room=>{ if(S.online && S.code===code){ S.raw=room; applyRoom(room); } });
+}
+// 部屋のデータ → 画面用の状態
+const pk = n => "p"+n;                       // 人ごとのキー（配列に化けないよう文字を付ける）
+const rk = r => "r"+r;                       // ラウンドごとのキー
+function byNum(o){ const m={}; Object.entries(o||{}).forEach(([k,v])=>{ if(v!=null && /^p\d+$/.test(k)) m[+k.slice(1)]=v; }); return m; }
+function byRound(o){ const a=[]; Object.entries(o||{}).forEach(([k,v])=>{ if(v!=null && /^r\d+$/.test(k)) a[+k.slice(1)]=v; }); return a; }
+function parseRound(rd){
+  rd=rd||{};
+  const wins=Object.entries(byNum(rd.wins)).map(([p,v])=>({p:+p, t:v.t||0, k:v.k||0})).sort((a,b)=>a.k-b.k);
+  return {ranks:wins.map(x=>({p:x.p, t:x.t})), gave:Object.keys(byNum(rd.gave)).map(Number), miss:byNum(rd.miss), hint:byNum(rd.hint), start:rd.start||0};
+}
+function applyRoom(room){
+  if(!room || !room.players || !room.players[PID]){
+    if(unsub){ unsub(); unsub=null; }
+    const msg = !room ? "部屋がなくなりました" : "部屋から外れました";
+    S={}; save(); closeForehead(); renderHome(); go("s-home"); toast(msg); return;
+  }
+  const st=room.state||{};
+  S.code=room.code||S.code; S.num=room.players[PID].num;
+  S.players=Object.entries(room.players).filter(([,p])=>p).map(([id,p])=>({id, name:p.name, num:p.num})).sort((a,b)=>a.num-b.num);
+  S.names={}; S.players.forEach(p=>{ S.names[p.num]=p.name; });
+  S.phase=st.phase||"lobby"; S.round=st.round||0; S.baseG=room.baseG||0; S.seed=S.code+":"+(room.created||0);
+  S.gh=byRound(st.gh); S.nh=byRound(st.nh); if(S.gh[0]==null) S.gh[0]=S.baseG;
+  for(let r=1;r<=S.round;r++){ if(S.gh[r]==null) S.gh[r]=S.gh[r-1]; if(S.nh[r]==null) S.nh[r]=S.nh[r-1]; }
+  const rounds=byRound(room.rounds), cur=parseRound(rounds[S.round]);
+  S.ranks=cur.ranks; S.gave=cur.gave; S.miss=cur.miss; S.hintUsed=cur.hint; S.hint=!!cur.hint[S.num]; S.start=cur.start;
+  S.history=[];
+  if(S.phase==="play") for(let r=0;r<S.round;r++){
+    const d=parseRound(rounds[r]), n=S.nh[r]||0; if(!n) continue;
+    S.history.push({round:r+1, genre:GENRES[S.gh[r]].name, results:resultsOf(n, topicsAt(r), d.ranks, d.gave, d.miss)});
+  }
+  save();
+
+  const prevRound=lastRound, prevPhase=lastPhase; lastRound=S.round; lastPhase=S.phase;
+  if(["s-home","s-create","s-join"].some(onScreen)){ renderHome(); return; }   // ホームにいるときは画面を動かさない
+  if(S.phase==="lobby"){ renderLobby(); if(!onScreen("s-lobby")) go("s-lobby"); return; }
+  if((prevPhase==="lobby") || (prevRound!=null && prevRound!==S.round)){
+    closeForehead(); $("gpick").classList.remove("on"); $("sheet").classList.remove("on"); myPrev=null;
+    renderReady(); go("s-ready");
+    toast(prevPhase==="lobby" ? "ゲームスタート！" : `ラウンド${S.round+1}：${curGenre().icon} ${curGenre().name}`);
+    return;
+  }
+  if(onScreen("s-lobby")){ renderReady(); go("s-ready"); }
+  if(onScreen("s-ready")) renderReady();
+  if(onScreen("s-board")) renderBoard();
+  if($("forehead").classList.contains("on")){ showMiss(); watchMyResult(); }
+}
+// 自分の結果がほかのスマホで記録されたら、おでこ画面にも出す
+function watchMyResult(){
+  const s=statusOf(S.num).s;
+  if(myPrev==="play" && s!=="play" && !$("fh-result").classList.contains("on")) showResult(s);
+  myPrev=s;
+}
+// ラウンドの記録を変える（通信あり：まず自分の画面に反映してから送る）
+function txRound(fn){
+  const path=`rooms/${S.code}/rounds/${rk(S.round)}`;
+  const local=JSON.parse(JSON.stringify(S.raw||{})); local.rounds=local.rounds||{};
+  const res=fn(local.rounds[rk(S.round)] ? JSON.parse(JSON.stringify(local.rounds[rk(S.round)])) : null);
+  if(res===undefined) return false;
+  local.rounds[rk(S.round)]=res; S.raw=local; applyRoom(local);
+  NET.tx(path, fn).catch(()=>toast("通信できませんでした"));
+  return true;
+}
+function startGame(){
+  if(S.players.length<2){ toast("2人以上でスタートできます"); return; }
+  const t=NET.now();
+  NET.tx(`rooms/${S.code}`, room=>{
+    if(!room) return room;
+    const st=room.state||{}; if(st.phase!=="lobby") return;
+    const ps=Object.entries(room.players||{}).filter(([,p])=>p).sort((a,b)=>a[1].num-b[1].num);
+    if(ps.length<2) return;
+    ps.forEach(([id],i)=>{ room.players[id].num=i+1; });         // 番号を1から詰める
+    const g = st.gh && st.gh.r0!=null ? st.gh.r0 : room.baseG;
+    room.state={phase:"play", round:0, gh:{r0:g}, nh:{r0:ps.length}};
+    room.rounds={r0:{start:t}};
+    return room;
+  }).catch(()=>toast("通信できませんでした"));
+}
+function shareRoom(){
+  const url=location.origin+location.pathname+"?room="+S.code, text=`おでこでお題当て 部屋番号 ${S.code}`;
+  if(navigator.share) navigator.share({title:"おでこでお題当て", text, url}).catch(()=>{});
+  else if(navigator.clipboard) navigator.clipboard.writeText(text+"\n"+url).then(()=>toast("招待リンクをコピーしました")).catch(()=>toast(url));
+  else toast(url);
+}
+function renderLobbyLoading(){ $("l-tiles").innerHTML=tiles(S.code||"----"); $("l-list").innerHTML='<p class="label">つないでいます…</p>'; $("l-start").disabled=true; }
+function renderLobby(){
+  const g=GENRES[S.gh[0]];
+  $("l-tiles").innerHTML=tiles(S.code);
+  $("l-genre").textContent=g.icon+" "+g.name; $("l-genre").style.setProperty("--gc", g.color);
+  $("l-count").textContent=`${S.players.length}人が参加中（8人まで）`;
+  $("l-list").innerHTML=S.players.map(p=>`<div class="lrow"><div class="pnum">${p.num}</div><b>${esc(p.name)}</b>${p.id===PID?'<span class="badge">あなた</span>':""}</div>`).join("");
+  $("l-start").disabled = S.players.length<2;
+  $("l-start").textContent = S.players.length<2 ? "あと1人以上集まったらスタート" : `${S.players.length}人でスタート`;
+}
+function changeLobbyGenre(){ gpSel=S.gh[0]; gpMode="lobby"; $("gp-title").textContent="ジャンルを変える"; $("gp-sub").textContent="全員のスマホに反映されます"; renderGpick(); $("gpick").classList.add("on"); }
 
 // ===== 準備 =====
 function renderReady(){
-  fix(); const g=curGenre();
+  fix(); const g=curGenre(), watcher=isWatcher();
   $("r-hint").textContent = S.hint ? "💡 ヒントをもう一度見る" : "💡 ヒントを見る（1ラウンド1回）";
   $("r-tiles").innerHTML = tiles(S.code);
   $("r-genre").textContent = g.icon+" "+g.name; $("r-genre").style.setProperty("--gc", g.color);
   $("r-round").textContent = `ラウンド ${S.round+1}`;
-  $("r-num").innerHTML = `${S.num}<small> 番</small>`;
+  $("r-num").innerHTML = `${S.num}<small> 番</small>` + (S.online && S.names[S.num] ? `<span class="you-name">${esc(S.names[S.num])}</span>` : "");
+  $("r-net").style.display = S.online ? "inline-block" : "none";
+  $("r-net").textContent = netOK ? "🟢 通信中" : "🔴 再接続中…";
+  $("r-note").textContent = !S.online ? "全員のラウンドがそろっているか確認してね"
+    : watcher ? "途中参加なので、次のラウンドから参加します。今は見学してね"
+    : `${nP()}人で対戦中。ラウンドは全員自動でそろいます`;
+  $("r-start").disabled = watcher; $("r-hint").disabled = watcher;
 }
 function toReady(){ closeForehead(); renderReady(); go("s-ready"); }
 
@@ -623,15 +950,16 @@ function fitTopic(){
 }
 async function keepAwake(){ try{ if("wakeLock" in navigator) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){} }
 function startForehead(){
+  if(isWatcher()){ toast("次のラウンドから参加できます"); return; }
   $("fh-cover").classList.remove("on");
   const g=curGenre(), [word,emoji]=topicsNow()[S.num-1];
   const fh=$("forehead"); fh.style.setProperty("--gc", g.color);
   $("fh-genre").textContent = g.icon+" "+g.name;
   $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none"; $("fh-hintbtn").style.display="none";
-  $("fh-result").classList.remove("on"); showMiss();
+  $("fh-result").classList.remove("on"); showMiss(); myPrev=statusOf(S.num).s;
   fh.classList.add("on"); keepAwake();
   if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
-  if(!S.start){ S.start=Date.now(); save(); }
+  if(!S.online && !S.start){ S.start=Date.now(); save(); }
   let c=3; const cnt=$("fh-count");
   const tick=()=>{ cnt.textContent=c; cnt.classList.remove("pop"); void cnt.offsetWidth; cnt.classList.add("pop"); };
   tick(); clearInterval(fhTimer);
@@ -652,14 +980,14 @@ function closeForehead(){
 }
 $("forehead").addEventListener("click", e=>{
   if(e.target.closest("button")) return;
-  const now=Date.now();
-  if(now-lastTap<350){ clearInterval(fhTimer); $("fh-cover").classList.add("on"); }
-  lastTap=now;
+  const t=Date.now();
+  if(t-lastTap<350){ clearInterval(fhTimer); $("fh-cover").classList.add("on"); }
+  lastTap=t;
 });
 addEventListener("resize", ()=>{ if($("fh-card").classList.contains("on")) fitTopic(); });
 
 // ===== 記録ボード =====
-const nameOf = i => S.names[i] || `プレイヤー${i}`;
+const nameOf = i => (S.names && S.names[i]) || `プレイヤー${i}`;
 const MEDALS = ["🥇","🥈","🥉"];
 const medal = k => MEDALS[k] || `${k+1}位`;
 function fmt(ms){ const s=Math.round(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
@@ -671,28 +999,55 @@ function statusOf(p){
   return {s:"play"};
 }
 const missOf = p => S.miss[p]||0;
-const allDone = () => { for(let i=1;i<=countOf(S.code);i++) if(statusOf(i).s==="play") return false; return true; };
+const allDone = () => { const n=nP(); if(!n) return false; for(let i=1;i<=n;i++) if(statusOf(i).s==="play") return false; return true; };
 
 // ラウンドの結果（順位・ポイント）
-function roundResults(){
-  const n=countOf(S.code), topics=topicsNow();
-  return Array.from({length:n},(_,k)=>{ const p=k+1, st=statusOf(p);
-    return {p, name:nameOf(p), topic:topics[k][0], s:st.s, rank:st.rank, t:st.t, miss:missOf(p), pts: st.s==="win" ? n-st.rank : 0}; });
+function resultsOf(n, topics, ranks, gave, miss){
+  return Array.from({length:n},(_,k)=>{
+    const p=k+1, r=ranks.findIndex(x=>x.p===p), s = r>=0 ? "win" : gave.includes(p) ? "give" : "play";
+    return {p, name:nameOf(p), topic:topics[k][0], s, rank:r>=0?r:undefined, t:r>=0?ranks[r].t:undefined, miss:miss[p]||0, pts: s==="win" ? n-r : 0};
+  });
 }
+function roundResults(){ fix(); return resultsOf(nP(), topicsNow(), S.ranks, S.gave, S.miss); }
 
 // 判定（おでこ画面のボタン：画面を見ている人が押す）
 function setResult(p, kind){
   fix();
   const was=statusOf(p).s;
-  if(kind==="miss"){ if(was!=="play") return false; S.miss[p]=missOf(p)+1; }
-  if(kind==="win"){ if(was==="win") return false; S.gave=S.gave.filter(x=>x!==p); S.ranks.push({p, t:Date.now()-(S.start||Date.now())}); }
-  if(kind==="give"){ if(was!=="play") return false; S.gave.push(p); }
+  if(kind==="miss" && was!=="play") return false;
+  if(kind==="win" && was==="win") return false;
+  if(kind==="give" && was!=="play") return false;
+  if(S.online){
+    const key=pk(p);
+    return txRound(cur=>{
+      cur=cur||{}; cur.wins=cur.wins||{}; cur.gave=cur.gave||{}; cur.miss=cur.miss||{};
+      const won=!!cur.wins[key], gave=!!cur.gave[key];
+      if(kind==="miss"){ if(won||gave) return; cur.miss[key]=(cur.miss[key]||0)+1; }
+      if(kind==="win"){ if(won) return; const ks=Object.values(cur.wins).filter(Boolean).map(v=>v.k||0);
+        cur.wins[key]={t:Math.max(0, NET.now()-(cur.start||NET.now())), k: ks.length ? Math.max(...ks)+1 : 0}; delete cur.gave[key]; }
+      if(kind==="give"){ if(won||gave) return; cur.gave[key]=true; }
+      if(kind==="undo"){ delete cur.wins[key]; delete cur.gave[key]; }
+      return cur;
+    });
+  }
+  if(kind==="miss"){ S.miss[p]=missOf(p)+1; }
+  if(kind==="win"){ S.gave=S.gave.filter(x=>x!==p); S.ranks.push({p, t:Date.now()-(S.start||Date.now())}); }
+  if(kind==="give"){ S.gave.push(p); }
   if(kind==="undo"){ S.ranks=S.ranks.filter(x=>x.p!==p); S.gave=S.gave.filter(x=>x!==p); }
   save(); return true;
 }
 function showMiss(){ fix(); const m=missOf(S.num), el=$("fh-miss"); el.style.display = m ? "block" : "none"; el.textContent=`❌ × ${m}`; }
+function showResult(kind){
+  const p=S.num, topic=topicsNow()[p-1], st=statusOf(p);
+  clearInterval(fhTimer);
+  $("fr-title").textContent = kind==="win" ? `正解！ ${medal(st.rank)}` : "ざんねん！";
+  $("fr-ans").innerHTML = `${topic[1]?`<span>${topic[1]}</span>`:""}${esc(topic[0])}`;
+  $("fr-sub").textContent = kind==="win" ? `タイム ${fmt(st.t||0)}・ハズレ ${missOf(p)}回` : `ハズレ ${missOf(p)}回`;
+  $("fh-result").classList.add("on");
+  if(kind==="win") confetti();
+}
 function judge(kind){
-  const p=S.num, topic=topicsNow()[p-1];
+  const p=S.num;
   if(kind==="miss"){
     if(!setResult(p,"miss")) return;
     showMiss(); const c=$("fh-card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
@@ -701,13 +1056,8 @@ function judge(kind){
   }
   ask({title: kind==="win" ? "正解にしますか？" : "ギブアップしますか？", text:"お題が本人に見えます", ok: kind==="win" ? "正解！" : "ギブアップ",
     onOk:()=>{
-      setResult(p,kind); clearInterval(fhTimer);
-      const st=statusOf(p);
-      $("fr-title").textContent = kind==="win" ? `正解！ ${medal(st.rank)}` : "ざんねん！";
-      $("fr-ans").innerHTML = `${topic[1]?`<span>${topic[1]}</span>`:""}${esc(topic[0])}`;
-      $("fr-sub").textContent = kind==="win" ? `タイム ${fmt(st.t)}・ハズレ ${missOf(p)}回` : `ハズレ ${missOf(p)}回`;
-      $("fh-result").classList.add("on");
-      if(kind==="win") confetti();
+      setResult(p,kind); myPrev=statusOf(p).s;
+      if(!$("fh-result").classList.contains("on")) showResult(kind);
     }});
 }
 
@@ -723,6 +1073,7 @@ function hintFor(word){
 }
 function useHint(){
   fix();
+  if(isWatcher()) return;
   const show=()=>{
     clearInterval(fhTimer);
     const [word]=topicsNow()[S.num-1];
@@ -731,25 +1082,33 @@ function useHint(){
   };
   if(S.hint){ show(); return; }
   ask({title:"ヒントを使いますか？", text:"1ラウンドに1回だけ。記録ボードに💡がつきます", ok:"使う", onOk:()=>{
-    S.hint=true; S.hintUsed=S.hintUsed||{}; S.hintUsed[S.num]=true; save(); renderReady(); show();
+    if(S.online){ const key=pk(S.num); txRound(cur=>{ cur=cur||{}; cur.hint=cur.hint||{}; cur.hint[key]=true; return cur; }); }
+    else { S.hint=true; S.hintUsed=S.hintUsed||{}; S.hintUsed[S.num]=true; save(); }
+    renderReady(); show();
   }});
 }
 
 function openBoard(){ closeForehead(); fix(); renderBoard(); go("s-board"); }
 function renderBoard(){
   fix();
-  const n=countOf(S.code), topics=topicsNow();
+  const n=nP(), topics=topicsNow();
   $("b-round").textContent = `ラウンド ${S.round+1}`;
+  $("b-hint").textContent = S.online
+    ? "人をタップして「正解」「ハズレ」「ギブアップ」を記録。全員のスマホに反映されます。"
+    : "人をタップして「正解」「ハズレ」「ギブアップ」を記録。名前もここで変えられます。";
   let h="";
   for(let i=1;i<=n;i++){
     const st=statusOf(i), [w,e]=topics[i-1], m=missOf(i);
     const right = st.s==="win" ? `<span class="m">${medal(st.rank)}</span>${fmt(st.t)}`
                 : st.s==="give" ? `<span class="m">🏳️</span>ギブ` : "";
+    const mine = i===S.num;
     h+=`<div class="prow ${st.s==="win"?'won':''} ${st.s==="give"?'give':''}" data-p="${i}" role="button" tabindex="0">
-      <div class="pnum">${i}</div>${e?`<div class="pem">${e}</div>`:""}
-      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}${S.hintUsed&&S.hintUsed[i]?`<span class="hint-used">💡</span>`:""}<div class="ptopic">${esc(w)}${i===S.num?"・あなた":""}</div></div>
+      <div class="pnum">${i}</div>${e && !mine?`<div class="pem">${e}</div>`:(mine?`<div class="pem">🙈</div>`:"")}
+      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}${S.hintUsed&&S.hintUsed[i]?`<span class="hint-used">💡</span>`:""}<div class="ptopic">${mine && st.s==="play" ? "？？？・あなた" : esc(w)+(mine?"・あなた":"")}</div></div>
       <div class="status">${right}</div></div>`;
   }
+  const waiting = S.online ? S.players.filter(p=>p.num>n) : [];
+  if(waiting.length) h+=`<p class="hint" style="margin-top:4px">次のラウンドから参加：${waiting.map(p=>esc(p.name)).join("、")}</p>`;
   $("b-list").innerHTML=h;
   document.querySelectorAll("#b-list .prow").forEach(row=>{
     const open=()=>openSheet(+row.dataset.p);
@@ -789,9 +1148,9 @@ function renderBoard(){
 // 判定シート（記録ボードで人をタップ）
 let sheetP=0;
 function openSheet(p){
-  sheetP=p; const st=statusOf(p), w=topicsNow()[p-1][0];
+  sheetP=p; const st=statusOf(p), w=topicsNow()[p-1][0], mine=p===S.num && st.s==="play";
   $("sh-title").textContent = `${p}番 ${nameOf(p)}`;
-  $("sh-sub").textContent = `お題：${w}・ハズレ${missOf(p)}回` + (st.s==="win" ? `・${medal(st.rank)}` : st.s==="give" ? "・ギブアップ" : "");
+  $("sh-sub").textContent = `お題：${mine?"？？？":w}・ハズレ${missOf(p)}回` + (st.s==="win" ? `・${medal(st.rank)}` : st.s==="give" ? "・ギブアップ" : "");
   $("sheet").classList.add("on");
 }
 function sheetDo(kind){
@@ -807,26 +1166,50 @@ function sheetDo(kind){
   if(allDone() && kind!=="undo"){ setTimeout(()=>{ toast("ラウンド終了！"); window.scrollTo({top:0,behavior:"smooth"}); }, 900); }
 }
 function rename(p){
-  ask({title:`${p}番の名前`, input:S.names[p]||"", ok:"決定",
-    onOk:v=>{ S.names[p]=v.trim().slice(0,12); save(); renderBoard(); }});
+  ask({title:`${p}番の名前`, input:nameOf(p).startsWith("プレイヤー")?"":nameOf(p), ok:"決定",
+    onOk:v=>{
+      v=v.trim().slice(0,12);
+      if(S.online){ const pl=S.players.find(x=>x.num===p); if(pl && v) NET.set(`rooms/${S.code}/players/${pl.id}/name`, v); return; }
+      S.names[p]=v; save(); renderBoard();
+    }});
 }
-let gpSel=0;
+let gpSel=0, gpMode="next";
 function nextRound(){
   fix();
   const left = roundResults().filter(r=>r.s==="play").length;
-  gpSel = hist()[S.round];
+  gpSel = hist()[S.round]; gpMode="next";
   $("gp-title").textContent = `ラウンド${S.round+2}のジャンル`;
-  $("gp-sub").textContent = (left ? `まだ${left}人が決着していません。` : "") + "全員のスマホで同じジャンルを選んでね";
+  $("gp-sub").textContent = (left ? `まだ${left}人が決着していません。` : "")
+    + (S.online ? "選んだジャンルで、全員のスマホが次のラウンドに進みます" : "全員のスマホで同じジャンルを選んでね");
   renderGpick(); $("gpick").classList.add("on");
 }
 function renderGpick(){
   $("gp-list").innerHTML = GENRES.map((g,i)=>
     `<div class="gchip ${i===gpSel?'sel':''}" style="--gc:${g.color}" onclick="gpSel=${i};renderGpick()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("")
     + `<div class="gchip ${gpSel===-1?'sel':''}" style="--gc:#FFD23F" onclick="gpSel=-1;renderGpick()"><span class="ge">🎲</span>おまかせ</div>`;
+  $("gp-ok").textContent = gpMode==="lobby" ? "このジャンルにする" : "次のラウンドへ";
 }
 function confirmNextRound(){
   $("gpick").classList.remove("on");
+  if(gpMode==="lobby"){
+    const g = gpSel===-1 ? randomGenre(S.code, 0) : gpSel;
+    NET.set(`rooms/${S.code}/state/gh/r0`, g).catch(()=>toast("通信できませんでした"));
+    return;
+  }
   const g = gpSel===-1 ? randomGenre(S.code, S.round+1) : gpSel;
+  if(S.online){
+    const expected=S.round, t=NET.now();
+    NET.tx(`rooms/${S.code}`, room=>{
+      if(!room) return room;
+      const st=room.state; if(!st || st.phase!=="play" || (st.round||0)!==expected) return;   // ほかの人が先に進めた
+      const nr=expected+1;
+      st.round=nr; st.gh=st.gh||{}; st.nh=st.nh||{};
+      st.gh[rk(nr)]=g; st.nh[rk(nr)]=Object.values(room.players||{}).filter(Boolean).length;   // 途中参加の人もここから入る
+      room.rounds=room.rounds||{}; room.rounds[rk(nr)]={start:t};
+      return room;
+    }).then(r=>{ if(!r.committed) toast("ほかの人が先に次のラウンドへ進めました"); }).catch(()=>toast("通信できませんでした"));
+    return;
+  }
   S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
   hist(); S.round++; S.gHist[S.round]=g;
   S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; save();
@@ -849,7 +1232,20 @@ function confetti(){
 }
 
 // ===== 起動：いつもホームから。続きがあれば「つづきから」を表示 =====
-renderCreate(); renderHome();
+renderCreate(); renderHome(); setMode("offline"); $("mode-note").textContent="通信の準備中…";
+$("jname-in").addEventListener("input", updateJoinBtn);
+initNet().then(ok=>{
+  if(ok){
+    NET.onConnected && NET.onConnected(c=>{ netOK=c; if(onScreen("s-ready")) renderReady(); });
+    setMode("online");
+  } else {
+    setMode("offline");
+    $("mode-note").textContent="通信できないので、通信なしモードで遊べます";
+    document.querySelector('#mode-switch [data-m="online"]').disabled=true;
+  }
+  const q=new URLSearchParams(location.search).get("room");     // 招待リンクから来たとき
+  if(q && /^\d{4}$/.test(q) && ok){ history.replaceState(null,"",location.pathname); openJoin(q, false); }
+});
 </script>
 <script>
 // 電波がなくても開けるようにする（sw.js）

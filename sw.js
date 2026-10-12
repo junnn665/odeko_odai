@@ -1,6 +1,6 @@
 // 電波がなくても遊べるようにするための保存設定
 // サイトを更新したら VERSION の数字を1つ上げると、みんなのスマホに新しい版が届きます
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "odeko-" + VERSION;
 const CORE = [
   "./",
@@ -40,8 +40,8 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // 文字のフォント（Google Fonts）：保存してある版を先に使い、裏で更新
-  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+  // 文字のフォント（Google Fonts）と通信用の部品（Firebase）：保存してある版を先に使い、裏で更新
+  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com" || (url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/"))) {
     e.respondWith(
       caches.open(CACHE).then(async c => {
         const hit = await c.match(req);
