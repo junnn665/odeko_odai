@@ -562,7 +562,14 @@ function firebaseNet(){
     remove(path){ return db.ref(path).remove(); },
     tx(path, fn){ return db.ref(path).transaction(fn).then(r=>({committed:r.committed, val:r.snapshot.val()})); },
     now(){ return Date.now()+offset; },
-    onConnected(cb){ db.ref(".info/connected").on("value", s=>cb(!!s.val())); }
+    onConnected(cb){ db.ref(".info/connected").on("value", s=>cb(!!s.val())); },
+    // 作られてから時間がたった部屋を消す（一度に最大30部屋）
+    cleanOld(cutoff){
+      return db.ref("rooms").orderByChild("created").endAt(cutoff).limitToFirst(30).once("value").then(snap=>{
+        const jobs=[]; snap.forEach(c=>{ const v=c.val(); if(v && v.created && v.created<=cutoff) jobs.push(c.ref.remove()); });
+        return Promise.all(jobs).then(()=>jobs.length);
+      });
+    }
   };
 }
 function initNet(){
@@ -1232,12 +1239,26 @@ function confetti(){
   })();
 }
 
+// ===== 古い部屋のお掃除 =====
+// 作ってから2日たった部屋は消す。どのスマホでも1日1回だけ、裏でこっそり行う
+const ROOM_LIFETIME = 2*24*3600*1000;
+function cleanOldRooms(){
+  if(!NET || !NET.cleanOld) return;
+  try{
+    const last=+localStorage.getItem("odeko_clean")||0;
+    if(Date.now()-last < 24*3600*1000) return;
+    localStorage.setItem("odeko_clean", String(Date.now()));
+  }catch(e){ return; }
+  setTimeout(()=>{ NET.cleanOld(NET.now()-ROOM_LIFETIME).catch(()=>{}); }, 3000);   // 権限がないなどで失敗しても遊ぶのには影響しない
+}
+
 // ===== 起動：いつもホームから。続きがあれば「つづきから」を表示 =====
 renderCreate(); renderHome(); setMode("offline"); $("mode-note").textContent="通信の準備中…";
 $("jname-in").addEventListener("input", updateJoinBtn);
 initNet().then(ok=>{
   if(ok){
     NET.onConnected && NET.onConnected(c=>{ netOK=c; if(onScreen("s-ready")) renderReady(); });
+    cleanOldRooms();
     setMode("online");
   } else {
     setMode("offline");
