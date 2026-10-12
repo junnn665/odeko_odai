@@ -193,6 +193,7 @@ input.codein{width:100%;font-family:var(--display);font-size:42px;letter-spacing
 #sheet .btn.small{padding:10px;font-size:15px;margin:6px 0}
 
 /* ヒント */
+#fh-passbtn{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 88px);left:12px;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:14px;cursor:pointer;display:none;font-family:inherit}
 #fh-hintbtn{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 44px);left:12px;background:var(--yellow);border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:14px;cursor:pointer;display:none;font-family:inherit}
 #hint-ov{position:fixed;inset:0;z-index:13;background:var(--night);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
 #hint-ov.on{display:flex}
@@ -227,6 +228,19 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
 .you-name{display:block;font-family:var(--body);font-size:18px;font-weight:800;margin-top:6px}
 #r-net{font-size:13px;padding:2px 10px}
 .btn:disabled{cursor:not-allowed}
+/* リアクション */
+.reacts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 14px}
+.reacts button{border:3px solid var(--ink);border-radius:999px;background:#fff;padding:7px 12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 3px 0 var(--ink);font-family:inherit}
+.reacts button:active{transform:translateY(3px);box-shadow:none}
+.reacts-label{color:#fff;opacity:.85;font-size:12px;text-align:center;margin:8px 0 0;font-weight:500}
+#react-pop{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 60px);transform:translateX(-50%);z-index:30;pointer-events:none;display:none;
+  background:#fff;border:4px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:10px 22px;text-align:center;white-space:nowrap}
+#react-pop.on{display:block;animation:rpop 2.2s ease forwards}
+#react-pop .rt{font-family:var(--display);font-size:30px;line-height:1.2}
+#react-pop .rf{font-size:13px;color:var(--muted)}
+@keyframes rpop{0%{opacity:0;transform:translateX(-50%) scale(.5)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}
+.small-btn{padding:10px;font-size:15px;margin:4px 0 0}
+.pass-used{display:inline-block;background:#E3F4FF;border-radius:999px;padding:0 8px;font-size:12px;margin-left:4px}
 
 /* 確認ダイアログ */
 #dlg{position:fixed;inset:0;background:rgba(26,16,51,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
@@ -286,6 +300,10 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
     <p class="label">ジャンル</p>
     <div class="genres" id="genre-list"></div>
   </div>
+  <div class="card">
+    <p class="label">むずかしさ</p>
+    <div class="genres" id="level-list"></div>
+  </div>
   <div class="card" id="count-card">
     <p class="label">人数</p>
     <div class="nums" id="count-list"></div>
@@ -337,11 +355,12 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div class="card stage">
     <p class="label">部屋番号</p>
     <div class="tiles" id="l-tiles"></div>
-    <div class="badges"><span class="badge g" id="l-genre"></span></div>
+    <div class="badges"><span class="badge g" id="l-genre"></span><span class="badge" id="l-level"></span></div>
     <div class="row2" style="margin-top:8px">
       <button class="btn" onclick="shareRoom()">招待する</button>
       <button class="btn" onclick="changeLobbyGenre()">ジャンル変更</button>
     </div>
+    <button class="btn small-btn" id="l-easy" onclick="toggleEasy()"></button>
   </div>
   <div class="card">
     <p class="label" id="l-count"></p>
@@ -363,6 +382,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
     <div class="badges">
       <span class="badge g" id="r-genre"></span>
       <span class="badge" id="r-round"></span>
+      <span class="badge" id="r-level" style="display:none">🌱 かんたん</span>
       <span class="badge" id="r-net" style="display:none"></span>
     </div>
   </div>
@@ -372,7 +392,12 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   </div>
   <p class="sub" style="margin-top:0" id="r-note">全員のラウンドがそろっているか確認してね</p>
   <button class="btn red" id="r-start" onclick="startForehead()">おでこにセット</button>
-  <button class="btn yellow" id="r-hint" onclick="useHint()">💡 ヒントを見る（1ラウンド1回）</button>
+  <div class="row2">
+    <button class="btn yellow" id="r-hint" onclick="useHint()">💡 ヒント</button>
+    <button class="btn yellow" id="r-pass" onclick="usePass()">🔄 お題パス</button>
+  </div>
+  <p class="sub" style="margin:-2px 0 6px;font-size:12px">ヒントとパスは1ラウンドに1回ずつ</p>
+  <div class="online-only"><p class="reacts-label">リアクション（全員のスマホに出ます）</p><div class="reacts"></div></div>
   <div class="row2">
     <button class="btn" onclick="openBoard()">記録ボード</button>
     <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
@@ -388,6 +413,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
     <div id="done-list"></div>
   </div>
   <p class="hint" id="b-hint">人をタップして「正解」「ハズレ」「ギブアップ」を記録。名前もここで変えられます。</p>
+  <div class="online-only"><div class="reacts"></div></div>
   <div id="b-list"></div>
   <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
   <div class="card" id="total-card" style="display:none;margin-top:16px">
@@ -407,6 +433,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div id="fh-card"><div id="fh-emoji"></div><div id="fh-word"></div></div>
   <button id="fh-back" onclick="toReady()">‹ もどる</button>
   <button id="fh-hintbtn" onclick="useHint()">💡 ヒント</button>
+  <button id="fh-passbtn" onclick="usePass()">🔄 パス</button>
   <div id="fh-miss"></div>
   <div id="fh-actions">
     <button class="btn red" onclick="judge('win')"><span class="ic">⭕</span>正解</button>
@@ -425,6 +452,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <h2 class="telop big" id="fr-title"></h2>
   <div class="ans" id="fr-ans"></div>
   <p class="sub" id="fr-sub" style="margin:0 0 8px"></p>
+  <div class="online-only" style="width:100%;max-width:340px"><p class="reacts-label">みんなにリアクション</p><div class="reacts"></div></div>
   <button class="btn yellow" onclick="openBoard()">記録ボードを見る</button>
   <button class="btn clear" onclick="$('fh-result').classList.remove('on');toReady()">準備画面にもどる</button>
 </div>
@@ -458,6 +486,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <button class="btn mint" style="margin-top:16px" id="gp-ok" onclick="confirmNextRound()">次のラウンドへ</button>
   <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
 </div></div>
+<div id="react-pop" aria-live="polite"><div class="rt" id="rp-text"></div><div class="rf" id="rp-from"></div></div>
 <canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
 
@@ -535,7 +564,22 @@ const GENRES = [
   {name:"数字", icon:"🔢", color:"#7FD8FF", topics: Array.from({length:100}, (_, i) => [String(i+1), ""])}  // 1〜100
 ];
 const COMBOS = GENRES.length * 7;                 // ジャンル × 人数(2〜8)
-const MAXSEED = Math.floor(10000 / COMBOS);       // 4ケタに収まる部屋の数
+const MAXSEED = Math.floor(10000 / (COMBOS*2));   // 4ケタに収まる部屋の数（×2 は かんたん／ふつう）
+// かんたんモードで出すお題（知っている人が多いもの）。数字は1〜20
+const EASY = {
+  "動物": ["犬","猫","ライオン","ゾウ","キリン","パンダ","ペンギン","コアラ","ウサギ","サル","ゴリラ","トラ","クマ","ウマ","ウシ","ブタ","ニワトリ","イルカ","クジラ","サメ","タコ","カメ","ワニ","ヘビ","カエル","シマウマ","ネズミ","カニ"],
+  "職業": ["医者","警察官","消防士","学校の先生","パイロット","料理人","宇宙飛行士","農家","歌手","野球選手","サッカー選手","歯医者","美容師","パン屋","花屋","タクシー運転手","電車の運転士","バスの運転手","保育士","お笑い芸人","漫画家","獣医","寿司職人","ダンサー","忍者"],
+  "もの": ["傘","目覚まし時計","鉛筆","ハサミ","テレビ","スマホ","メガネ","鍵","歯ブラシ","椅子","自転車","帽子","スニーカー","手袋","リュック","本","風船","ほうき","箸","電球","ピアノ","ギター","ベッド","トイレ","電話","カメラ","パソコン","王冠","サイコロ","太鼓"],
+  "食べ物": ["カレーライス","ラーメン","寿司","おにぎり","ハンバーガー","ピザ","ギョーザ","ショートケーキ","プリン","ソフトクリーム","チョコレート","ドーナツ","ポップコーン","バナナ","りんご","いちご","スイカ","みかん","ぶどう","メロン","トマト","にんじん","トウモロコシ","フライドポテト","目玉焼き","食パン"],
+  "チェーン店": ["マクドナルド","ケンタッキー","スターバックス","吉野家","すき家","サイゼリヤ","ガスト","CoCo壱番屋","丸亀製麺","スシロー","くら寿司","ミスタードーナツ","サーティワン","セブン-イレブン","ローソン","ファミリーマート","ユニクロ","ニトリ","ダイソー","イオン","ドン・キホーテ","コストコ"],
+  "趣味": ["釣り","キャンプ","ゴルフ","読書","カラオケ","ゲーム","料理","写真","旅行","サウナ","筋トレ","ランニング","水泳","スキー","お絵かき","ギター","ボウリング","卓球","テニス","買い物","ダンス","昼寝"],
+  "キャラクター": ["ドラえもん","のび太","アンパンマン","ばいきんまん","ピカチュウ","マリオ","カービィ","ハローキティ","ミッキーマウス","くまのプーさん","スヌーピー","トトロ","クレヨンしんちゃん","サザエさん","ちびまる子ちゃん","名探偵コナン","ルフィ","孫悟空","竈門炭治郎","ゴジラ","ウルトラマン","スパイダーマン","シンデレラ","エルサ","ミニオン"],
+  "プロ野球選手": ["大谷翔平","イチロー","松井秀喜","長嶋茂雄","王貞治","ダルビッシュ有","田中将大","佐々木朗希","村上宗隆","山本由伸","鈴木誠也","坂本勇人","新庄剛志","野茂英雄","松坂大輔","清原和博","桑田真澄","原辰徳","阿部慎之助","落合博満"],
+  "お笑い芸人": ["ダウンタウン","明石家さんま","ビートたけし","タモリ","とんねるず","ナインティナイン","サンドウィッチマン","千鳥","かまいたち","霜降り明星","ぺこぱ","EXIT","オードリー","爆笑問題","くりぃむしちゅー","出川哲朗","有吉弘行","渡辺直美","ゆりやんレトリィバァ","イモトアヤコ","小島よしお","錦鯉","ナイツ","バナナマン"],
+  "数字": Array.from({length:20}, (_, i) => String(i+1))
+};
+const listFor = (g, easy) => easy ? GENRES[g].topics.filter(t => (EASY[GENRES[g].name]||[]).includes(t[0])) : GENRES[g].topics;
+
 
 // ===== 通信（Firebase Realtime Database） =====
 const FIREBASE_CONFIG = {
@@ -584,7 +628,7 @@ function initNet(){
 // ===== 状態 =====
 let S = load() || {};
 let MODE = "online";                 // online=通信あり / offline=通信なし
-let pickGenre = 0, pickCount = 4, pickNum = 0;
+let pickGenre = 0, pickCount = 4, pickNum = 0, pickEasy = false;
 let fhTimer = null, wakeLock = null, lastTap = 0;
 function save(){ try{ const {raw, ...rest}=S; localStorage.setItem("odeko2", JSON.stringify(rest)); }catch(e){} }
 function load(){ try{ return JSON.parse(localStorage.getItem("odeko2")); }catch(e){ return null; } }
@@ -593,11 +637,12 @@ function myName(){ try{ return localStorage.getItem("odeko_name")||""; }catch(e)
 function saveName(v){ try{ localStorage.setItem("odeko_name", v); }catch(e){} }
 
 // ===== 部屋番号（通信なしモード：4ケタにジャンルと人数を埋め込む） =====
-function makeCode(g, n){ const seed=Math.floor(Math.random()*MAXSEED); return String(seed*COMBOS + g*7 + (n-2)).padStart(4,"0"); }
+function makeCode(g, n, easy){ const seed=Math.floor(Math.random()*MAXSEED); return String(seed*COMBOS*2 + (easy?COMBOS:0) + g*7 + (n-2)).padStart(4,"0"); }
 function decode(code){
   if(!/^\d{4}$/.test(code)) return null;
-  const v=parseInt(code,10); if(v >= MAXSEED*COMBOS) return null;
-  const r=v%COMBOS; return {g:Math.floor(r/7), n:r%7+2};
+  const v=parseInt(code,10); if(v >= MAXSEED*COMBOS*2) return null;
+  let r=v%(COMBOS*2); const easy=r>=COMBOS; r%=COMBOS;
+  return {g:Math.floor(r/7), n:r%7+2, easy};
 }
 const genreOf = code => GENRES[decode(code).g];
 const countOf = code => decode(code).n;
@@ -610,21 +655,22 @@ function rng(seed){ let a=hash(seed); return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Ma
 function shuffled(list, seed){ const a=list.slice(), r=rng(seed);
   for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 // 通信なし：ラウンドごとに、全員に重ならないお題を配る（前のラウンドとも重ならない）
-// gh = ラウンドごとのジャンル番号の配列（なければ部屋のジャンルのまま）
+// 1ラウンドで 本番 n 枚 ＋ パス用 n 枚 を使う。gh = ラウンドごとのジャンル番号の配列
 function topicsFor(code, round, gh){
-  const g = gh && gh[round]!=null ? gh[round] : decode(code).g;
-  if(gh && gh[round]!=null) round = gh.slice(0,round).filter(x=>x===g).length;  // そのジャンルで遊んだ回数
-  const list=GENRES[g].topics, n=countOf(code), per=Math.floor(list.length/n);
-  const deck=shuffled(list, "odeko:"+code+":"+(g===decode(code).g?"":g+":")+Math.floor(round/per)), slot=round%per;
-  return deck.slice(slot*n, slot*n+n);
+  const d=decode(code), g = gh && gh[round]!=null ? gh[round] : d.g;
+  const k = gh && gh[round]!=null ? gh.slice(0,round).filter(x=>x===g).length : round;   // そのジャンルで遊んだ回数
+  const list=listFor(g, d.easy), n=d.n, per=Math.max(1, Math.floor(list.length/(2*n)));
+  const deck=shuffled(list, "odeko:"+code+":"+(g===d.g?"":g+":")+Math.floor(k/per)), at=(k%per)*2*n;
+  return {main:deck.slice(at, at+n), spare:deck.slice(at+n, at+2*n)};
 }
 // 通信あり：ラウンドごとに人数が変わってもOKな配り方（gh=ジャンル, nh=人数）
-function topicsOnline(seed, gh, nh, round){
-  const g=gh[round], list=GENRES[g].topics, L=list.length; let pos=0, cyc=0;
-  const fit=n=>{ if(pos+n>L){ cyc++; pos=0; } };
-  for(let r=0;r<round;r++) if(gh[r]===g){ fit(nh[r]||0); pos+=nh[r]||0; }
-  const n=nh[round]||0; fit(n);
-  return shuffled(list, "on:"+seed+":"+g+":"+cyc).slice(pos, pos+n);
+function topicsOnline(seed, gh, nh, round, easy){
+  const g=gh[round], list=listFor(g, easy), L=list.length; let pos=0, cyc=0;
+  const fit=c=>{ if(pos+c>L){ cyc++; pos=0; } };
+  for(let r=0;r<round;r++) if(gh[r]===g){ const c=2*(nh[r]||0); fit(c); pos+=c; }
+  const n=nh[round]||0; fit(2*n);
+  const deck=shuffled(list, "on:"+seed+":"+g+":"+(easy?"e":"")+cyc);
+  return {main:deck.slice(pos, pos+n), spare:deck.slice(pos+n, pos+2*n)};
 }
 
 // おまかせ（部屋番号とラウンドが同じなら全員同じジャンル）
@@ -645,7 +691,13 @@ function hist(){
   S.gHist = S.gHist || []; while(S.gHist.length<=S.round) S.gHist.push(S.gHist.length ? S.gHist[S.gHist.length-1] : decode(S.code).g); return S.gHist;
 }
 const curGenre = () => GENRES[hist()[S.round]];
-const topicsAt = r => S.online ? topicsOnline(S.seed, S.gh, S.nh, r) : topicsFor(S.code, r, hist());
+// パスした人は予備のお題に入れかわる
+function topicsAt(r){
+  const d = S.online ? topicsOnline(S.seed, S.gh, S.nh, r, S.easy) : topicsFor(S.code, r, hist());
+  const passed = r===S.round ? (S.passUsed||{}) : ((S.passHist||[])[r]||{});
+  return d.main.map((t,i)=> passed[i+1] && d.spare[i] ? d.spare[i] : t);
+}
+const isEasy = () => S.online ? !!S.easy : !!(decode(S.code)||{}).easy;
 const topicsNow = () => topicsAt(S.round);
 const now = () => S.online && NET ? NET.now() : Date.now();
 
@@ -701,6 +753,8 @@ function renderCreate(){
     `<div class="gchip ${i===pickGenre?'sel':''}" style="--gc:${g.color}" onclick="pickGenre=${i};renderCreate()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("");
   let h=""; for(let n=2;n<=8;n++) h+=`<div class="nchip ${n===pickCount?'sel':''}" onclick="pickCount=${n};renderCreate()">${n}<small>人</small></div>`;
   $("count-list").innerHTML = h;
+  $("level-list").innerHTML = [[false,"🔥","ふつう"],[true,"🌱","かんたん"]].map(([e,ic,l])=>
+    `<div class="gchip ${pickEasy===e?'sel':''}" style="--gc:${e?'#9BE15D':'#FFD23F'}" onclick="pickEasy=${e};renderCreate()"><span class="ge">${ic}</span>${l}</div>`).join("");
   const on = MODE==="online";
   $("count-card").style.display = on ? "none" : "block";
   $("cname-card").style.display = on ? "block" : "none";
@@ -709,7 +763,7 @@ function renderCreate(){
 }
 function createRoom(){
   if(MODE==="online") return createOnline();
-  openJoin(makeCode(pickGenre,pickCount), true);
+  openJoin(makeCode(pickGenre,pickCount,pickEasy), true);
 }
 
 // ===== 参加 =====
@@ -718,7 +772,7 @@ function openJoin(code, created){
   pickNum = 0;
   $("join-created").style.display = created ? "block" : "none";
   $("join-input").style.display = created ? "none" : "block";
-  if(created){ $("created-tiles").innerHTML = tiles(code); $("created-desc").textContent = `${genreOf(code).name}・${countOf(code)}人`; }
+  if(created){ $("created-tiles").innerHTML = tiles(code); $("created-desc").textContent = `${genreOf(code).name}・${countOf(code)}人${decode(code).easy?"・かんたん":""}`; }
   $("code-in").value = code;
   $("jname-card").style.display = MODE==="online" ? "block" : "none";
   if(MODE==="online" && !$("jname-in").value) $("jname-in").value = myName();
@@ -751,7 +805,7 @@ function onCodeInput(){
   }
   const d=decode(code);
   m.className = "msg " + (d ? "ok" : "ng");
-  m.textContent = d ? `${GENRES[d.g].name}・${d.n}人の部屋` : (code.length===4 ? "その番号の部屋はありません" : "");
+  m.textContent = d ? `${GENRES[d.g].name}・${d.n}人${d.easy?"・かんたん":""}の部屋` : (code.length===4 ? "その番号の部屋はありません" : "");
   $("num-card").style.display = d ? "block" : "none";
   if(d){
     if(pickNum>d.n) pickNum=0;
@@ -795,7 +849,7 @@ async function createOnline(){
       const t=NET.now();
       const res=await NET.tx(`rooms/${code}`, room=>{
         if(room && room.created && t-room.created < 12*3600*1000) return;   // 使用中の番号はとばす
-        return {code, created:t, baseG:pickGenre, players:{[PID]:{name, num:1}}, state:{phase:"lobby", round:0, gh:{r0:pickGenre}}};
+        return {code, created:t, baseG:pickGenre, easy:pickEasy, players:{[PID]:{name, num:1}}, state:{phase:"lobby", round:0, gh:{r0:pickGenre}}};
       });
       if(res.committed){ enterOnline(code); return; }
     }
@@ -833,7 +887,7 @@ function enterOnline(code){
 }
 function subscribe(code){
   if(unsub) unsub();
-  lastRound=null; lastPhase=null; myPrev=null;
+  lastRound=null; lastPhase=null; myPrev=null; lastReactId=null;
   unsub=NET.on(`rooms/${code}`, room=>{ if(S.online && S.code===code){ S.raw=room; applyRoom(room); } });
 }
 // 部屋のデータ → 画面用の状態
@@ -844,7 +898,7 @@ function byRound(o){ const a=[]; Object.entries(o||{}).forEach(([k,v])=>{ if(v!=
 function parseRound(rd){
   rd=rd||{};
   const wins=Object.entries(byNum(rd.wins)).map(([p,v])=>({p:+p, t:v.t||0, k:v.k||0})).sort((a,b)=>a.k-b.k);
-  return {ranks:wins.map(x=>({p:x.p, t:x.t})), gave:Object.keys(byNum(rd.gave)).map(Number), miss:byNum(rd.miss), hint:byNum(rd.hint), start:rd.start||0};
+  return {ranks:wins.map(x=>({p:x.p, t:x.t})), gave:Object.keys(byNum(rd.gave)).map(Number), miss:byNum(rd.miss), hint:byNum(rd.hint), pass:byNum(rd.pass), start:rd.start||0};
 }
 function applyRoom(room){
   if(!room || !room.players || !room.players[PID]){
@@ -856,17 +910,19 @@ function applyRoom(room){
   S.code=room.code||S.code; S.num=room.players[PID].num;
   S.players=Object.entries(room.players).filter(([,p])=>p).map(([id,p])=>({id, name:p.name, num:p.num})).sort((a,b)=>a.num-b.num);
   S.names={}; S.players.forEach(p=>{ S.names[p.num]=p.name; });
-  S.phase=st.phase||"lobby"; S.round=st.round||0; S.baseG=room.baseG||0; S.seed=S.code+":"+(room.created||0);
+  S.phase=st.phase||"lobby"; S.round=st.round||0; S.baseG=room.baseG||0; S.seed=S.code+":"+(room.created||0); S.easy=!!room.easy;
   S.gh=byRound(st.gh); S.nh=byRound(st.nh); if(S.gh[0]==null) S.gh[0]=S.baseG;
   for(let r=1;r<=S.round;r++){ if(S.gh[r]==null) S.gh[r]=S.gh[r-1]; if(S.nh[r]==null) S.nh[r]=S.nh[r-1]; }
   const rounds=byRound(room.rounds), cur=parseRound(rounds[S.round]);
+  S.passUsed=cur.pass; S.passHist=rounds.map(rd=>parseRound(rd).pass);
   S.ranks=cur.ranks; S.gave=cur.gave; S.miss=cur.miss; S.hintUsed=cur.hint; S.hint=!!cur.hint[S.num]; S.start=cur.start;
   S.history=[];
   if(S.phase==="play") for(let r=0;r<S.round;r++){
     const d=parseRound(rounds[r]), n=S.nh[r]||0; if(!n) continue;
     S.history.push({round:r+1, genre:GENRES[S.gh[r]].name, results:resultsOf(n, topicsAt(r), d.ranks, d.gave, d.miss)});
   }
-  save();
+  save(); showOnlineOnly();
+  checkReact(room.react);
 
   const prevRound=lastRound, prevPhase=lastPhase; lastRound=S.round; lastPhase=S.phase;
   if(["s-home","s-create","s-join"].some(onScreen)){ renderHome(); return; }   // ホームにいるときは画面を動かさない
@@ -926,15 +982,22 @@ function renderLobby(){
   $("l-genre").textContent=g.icon+" "+g.name; $("l-genre").style.setProperty("--gc", g.color);
   $("l-count").textContent=`${S.players.length}人が参加中（8人まで）`;
   $("l-list").innerHTML=S.players.map(p=>`<div class="lrow"><div class="pnum">${p.num}</div><b>${esc(p.name)}</b>${p.id===PID?'<span class="badge">あなた</span>':""}</div>`).join("");
+  $("l-level").textContent = S.easy ? "🌱 かんたん" : "🔥 ふつう";
+  $("l-easy").textContent = S.easy ? "ふつうモードにする" : "かんたんモードにする";
   $("l-start").disabled = S.players.length<2;
   $("l-start").textContent = S.players.length<2 ? "あと1人以上集まったらスタート" : `${S.players.length}人でスタート`;
 }
+function toggleEasy(){ NET.set(`rooms/${S.code}/easy`, !S.easy).catch(()=>toast("通信できませんでした")); }
 function changeLobbyGenre(){ gpSel=S.gh[0]; gpMode="lobby"; $("gp-title").textContent="ジャンルを変える"; $("gp-sub").textContent="全員のスマホに反映されます"; renderGpick(); $("gpick").classList.add("on"); }
 
 // ===== 準備 =====
 function renderReady(){
-  fix(); const g=curGenre(), watcher=isWatcher();
-  $("r-hint").textContent = S.hint ? "💡 ヒントをもう一度見る" : "💡 ヒントを見る（1ラウンド1回）";
+  fix(); showOnlineOnly(); const g=curGenre(), watcher=isWatcher();
+  const passed=!!(S.passUsed||{})[S.num], done=statusOf(S.num).s!=="play";
+  $("r-hint").textContent = S.hint ? "💡 もう一度見る" : "💡 ヒント";
+  $("r-pass").textContent = passed ? "🔄 パスずみ" : "🔄 お題パス";
+  $("r-pass").disabled = passed || done || watcher;
+  $("r-level").style.display = isEasy() ? "inline-block" : "none";
   $("r-tiles").innerHTML = tiles(S.code);
   $("r-genre").textContent = g.icon+" "+g.name; $("r-genre").style.setProperty("--gc", g.color);
   $("r-round").textContent = `ラウンド ${S.round+1}`;
@@ -963,7 +1026,7 @@ function startForehead(){
   const g=curGenre(), [word,emoji]=topicsNow()[S.num-1];
   const fh=$("forehead"); fh.style.setProperty("--gc", g.color);
   $("fh-genre").textContent = g.icon+" "+g.name;
-  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none"; $("fh-hintbtn").style.display="none";
+  $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none"; $("fh-hintbtn").style.display="none"; $("fh-passbtn").style.display="none";
   $("fh-result").classList.remove("on"); showMiss(); myPrev=statusOf(S.num).s;
   fh.classList.add("on"); keepAwake();
   if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
@@ -977,7 +1040,7 @@ function startForehead(){
     $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word;
     $("fh-card").classList.add("on"); fitTopic();
     $("fh-hint").style.display="block";
-    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hintbtn").style.display="block"; $("fh-hint").style.display="none"; } }, 3000);
+    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hintbtn").style.display="block"; $("fh-passbtn").style.display = (S.passUsed||{})[S.num] ? "none" : "block"; $("fh-hint").style.display="none"; } }, 3000);
   },1000);
 }
 function closeForehead(){
@@ -1096,9 +1159,28 @@ function useHint(){
   }});
 }
 
+// お題パス（1ラウンド1回。新しいお題に入れかわる）
+function usePass(){
+  fix();
+  if(isWatcher()) return;
+  if((S.passUsed||{})[S.num]){ toast("このラウンドのパスはもう使いました"); return; }
+  if(statusOf(S.num).s!=="play"){ toast("もう決着しています"); return; }
+  ask({title:"お題をパスしますか？", text:"1ラウンドに1回だけ。新しいお題に入れかわります", ok:"パスする", onOk:()=>{
+    if(S.online){ const key=pk(S.num); txRound(cur=>{ cur=cur||{}; cur.pass=cur.pass||{}; if(cur.pass[key]) return; cur.pass[key]=true; return cur; }); }
+    else { S.passUsed=S.passUsed||{}; S.passUsed[S.num]=true; save(); }
+    toast("🔄 お題が変わりました");
+    if($("forehead").classList.contains("on")){
+      const [word,emoji]=topicsNow()[S.num-1];
+      $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word; fitTopic();
+      const c=$("fh-card"); c.classList.remove("on"); void c.offsetWidth; c.classList.add("on");
+      $("fh-passbtn").style.display="none";
+    } else renderReady();
+  }});
+}
+
 function openBoard(){ closeForehead(); fix(); renderBoard(); go("s-board"); }
 function renderBoard(){
-  fix();
+  fix(); showOnlineOnly();
   const n=nP(), topics=topicsNow();
   $("b-round").textContent = `ラウンド ${S.round+1}`;
   $("b-hint").textContent = S.online
@@ -1112,7 +1194,7 @@ function renderBoard(){
     const mine = i===S.num;
     h+=`<div class="prow ${st.s==="win"?'won':''} ${st.s==="give"?'give':''}" data-p="${i}" role="button" tabindex="0">
       <div class="pnum">${i}</div>${e && !mine?`<div class="pem">${e}</div>`:(mine?`<div class="pem">🙈</div>`:"")}
-      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}${S.hintUsed&&S.hintUsed[i]?`<span class="hint-used">💡</span>`:""}<div class="ptopic">${mine && st.s==="play" ? "？？？・あなた" : esc(w)+(mine?"・あなた":"")}</div></div>
+      <div class="pname">${esc(nameOf(i))}${m?`<span class="miss">❌${m}</span>`:""}${S.hintUsed&&S.hintUsed[i]?`<span class="hint-used">💡</span>`:""}${(S.passUsed||{})[i]?`<span class="pass-used">🔄</span>`:""}<div class="ptopic">${mine && st.s==="play" ? "？？？・あなた" : esc(w)+(mine?"・あなた":"")}</div></div>
       <div class="status">${right}</div></div>`;
   }
   const waiting = S.online ? S.players.filter(p=>p.num>n) : [];
@@ -1220,9 +1302,54 @@ function confirmNextRound(){
   }
   S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
   hist(); S.round++; S.gHist[S.round]=g;
-  S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; save();
+  S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; S.passUsed={}; save();
   renderReady(); go("s-ready");
   toast(`ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}`);
+}
+
+// ===== リアクション（通信あり：全員のスマホに表示して音を鳴らす） =====
+const REACTS = [["おしい！","🤏"],["ぜんぜん違う！","🙅"],["あと少し！","🔥"],["天才！","🤩"],["ウケる","🤣"]];
+let lastReactId=null, lastReactSent=0, audio=null;
+function initReacts(){
+  document.querySelectorAll(".reacts").forEach(box=>{
+    box.innerHTML = REACTS.map(([t,e],i)=>`<button type="button" onclick="sendReact(${i})">${e} ${t}</button>`).join("");
+  });
+}
+function showOnlineOnly(){ document.querySelectorAll(".online-only").forEach(el=>el.style.display = S.online ? "" : "none"); }
+function sendReact(i){
+  if(!S.online || !NET) return;
+  if(Date.now()-lastReactSent < 1500){ toast("ちょっと待ってね"); return; }
+  lastReactSent=Date.now();
+  const id=Math.random().toString(36).slice(2,9);
+  NET.set(`rooms/${S.code}/react`, {id, i, t:NET.now(), from:nameOf(S.num)}).catch(()=>toast("通信できませんでした"));
+}
+function checkReact(r){
+  if(!r || !r.id || r.id===lastReactId) return;
+  const first = lastReactId===null; lastReactId=r.id;
+  if(first && NET.now()-(r.t||0) > 5000) return;      // 入ったときに残っていた古いものは出さない
+  const [t,e]=REACTS[r.i]||REACTS[0];
+  $("rp-text").textContent=`${e} ${t}`; $("rp-from").textContent = r.from ? `${r.from}より` : "";
+  const el=$("react-pop"); el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
+  playReact(r.i);
+}
+// 効果音（音のファイルを使わず、その場で作る）
+function unlockAudio(){ try{ if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==="suspended") audio.resume(); }catch(e){} }
+addEventListener("pointerdown", unlockAudio, {passive:true});
+function tone(freq, start, dur, type="square", vol=0.12){
+  const o=audio.createOscillator(), g=audio.createGain(), t=audio.currentTime+start;
+  o.type=type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t+dur+0.02);
+}
+function playReact(i){
+  if(!audio || audio.state!=="running") return;
+  try{
+    if(i===0){ tone(880,0,.12); tone(740,.14,.25); }                                  // おしい
+    else if(i===1){ tone(160,0,.45,"sawtooth",.15); }                                   // ぜんぜん違う
+    else if(i===2){ [523,659,784].forEach((f,k)=>tone(f,k*.09,.14)); }                  // あと少し
+    else if(i===3){ [523,659,784,1047].forEach((f,k)=>tone(f,k*.08,.22,"triangle",.18)); } // 天才
+    else { [660,880,660,990].forEach((f,k)=>tone(f,k*.07,.08,"square",.08)); }          // ウケる
+  }catch(e){}
 }
 
 // ===== 紙吹雪 =====
@@ -1253,7 +1380,7 @@ function cleanOldRooms(){
 }
 
 // ===== 起動：いつもホームから。続きがあれば「つづきから」を表示 =====
-renderCreate(); renderHome(); setMode("offline"); $("mode-note").textContent="通信の準備中…";
+initReacts(); renderCreate(); renderHome(); setMode("offline"); $("mode-note").textContent="通信の準備中…";
 $("jname-in").addEventListener("input", updateJoinBtn);
 initNet().then(ok=>{
   if(ok){
