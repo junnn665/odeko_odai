@@ -482,9 +482,16 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
 <div id="gpick" role="dialog" aria-modal="true"><div class="card">
   <h3 id="gp-title"></h3>
   <p id="gp-sub"></p>
-  <div class="genres" id="gp-level" style="grid-template-columns:1fr 1fr;margin-bottom:12px"></div>
-  <div class="genres" id="gp-list"></div>
-  <button class="btn mint" style="margin-top:16px" id="gp-ok" onclick="confirmNextRound()">次のラウンドへ</button>
+  <div id="gp-quick">
+    <button class="btn mint" id="gq-same" onclick="quickNext('same')"></button>
+    <button class="btn yellow" onclick="quickNext('omakase')">🎲 おまかせで次へ</button>
+    <button class="btn" onclick="showFullPick()">ジャンル・むずかしさを選ぶ</button>
+  </div>
+  <div id="gp-full">
+    <div class="genres" id="gp-level" style="grid-template-columns:1fr 1fr;margin-bottom:12px"></div>
+    <div class="genres" id="gp-list"></div>
+    <button class="btn mint" style="margin-top:16px" id="gp-ok" onclick="confirmNextRound()">次のラウンドへ</button>
+  </div>
   <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
 </div></div>
 <div id="react-pop" aria-live="polite"><div class="rt" id="rp-text"></div><div class="rf" id="rp-from"></div></div>
@@ -997,7 +1004,7 @@ function renderLobby(){
   $("l-start").textContent = S.players.length<2 ? "あと1人以上集まったらスタート" : `${S.players.length}人でスタート`;
 }
 function toggleEasy(){ NET.set(`rooms/${S.code}/easy`, !S.easy).catch(()=>toast("通信できませんでした")); }
-function changeLobbyGenre(){ gpSel=S.gh[0]; gpMode="lobby"; $("gp-title").textContent="ジャンルを変える"; $("gp-sub").textContent="全員のスマホに反映されます"; renderGpick(); $("gpick").classList.add("on"); }
+function changeLobbyGenre(){ $("gp-quick").style.display="none"; $("gp-full").style.display="block"; gpSel=S.gh[0]; gpMode="lobby"; $("gp-title").textContent="ジャンルを変える"; $("gp-sub").textContent="全員のスマホに反映されます"; renderGpick(); $("gpick").classList.add("on"); }
 
 // ===== 準備 =====
 function renderReady(){
@@ -1277,10 +1284,24 @@ function nextRound(){
   fix();
   const left = roundResults().filter(r=>r.s==="play").length;
   gpSel = hist()[S.round]; gpMode="next"; gpEasy = isEasy();
-  $("gp-title").textContent = `ラウンド${S.round+2}のジャンル`;
+  const g=curGenre();
+  $("gp-title").textContent = `ラウンド${S.round+2}へ`;
   $("gp-sub").textContent = (left ? `まだ${left}人が決着していません。` : "")
-    + (S.online ? "選んだジャンルとむずかしさで、全員のスマホが次のラウンドに進みます" : "全員のスマホで同じジャンルとむずかしさを選んでね");
+    + (S.online ? "誰か1人が押せば、全員のスマホが次のラウンドに進みます" : "全員が同じボタンを押せばOK。「同じまま」か「おまかせ」なら選ぶ手間なし");
+  $("gq-same").textContent = `▶ 同じままで次へ（${g.icon} ${g.name}・${isEasy()?"かんたん":"ふつう"}）`;
+  $("gp-quick").style.display="block"; $("gp-full").style.display="none";
   renderGpick(); $("gpick").classList.add("on");
+}
+// 次のラウンド：ワンタップで進む
+function quickNext(kind){
+  gpSel = kind==="same" ? hist()[S.round] : -1;   // -1 = おまかせ（部屋番号とラウンドから全員同じジャンルになる）
+  gpEasy = isEasy();
+  confirmNextRound();
+}
+function showFullPick(){
+  $("gp-quick").style.display="none"; $("gp-full").style.display="block";
+  $("gp-title").textContent = `ラウンド${S.round+2}のジャンル`;
+  $("gp-sub").textContent = S.online ? "選んだジャンルとむずかしさで、全員のスマホが次のラウンドに進みます" : "全員のスマホで同じジャンルとむずかしさを選んでね";
 }
 function renderGpick(){
   $("gp-level").style.display = gpMode==="next" ? "grid" : "none";

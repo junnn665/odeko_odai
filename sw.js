@@ -1,6 +1,6 @@
 // 電波がなくても遊べるようにするための保存設定
 // サイトを更新したら VERSION の数字を1つ上げると、みんなのスマホに新しい版が届きます
-const VERSION = "v6";
+const VERSION = "v7";
 const CACHE = "odeko-" + VERSION;
 const CORE = [
   "./",
