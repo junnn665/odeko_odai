@@ -482,6 +482,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
 <div id="gpick" role="dialog" aria-modal="true"><div class="card">
   <h3 id="gp-title"></h3>
   <p id="gp-sub"></p>
+  <div class="genres" id="gp-level" style="grid-template-columns:1fr 1fr;margin-bottom:12px"></div>
   <div class="genres" id="gp-list"></div>
   <button class="btn mint" style="margin-top:16px" id="gp-ok" onclick="confirmNextRound()">次のラウンドへ</button>
   <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
@@ -654,23 +655,24 @@ function hash(str){ let h1=0xdeadbeef^str.length,h2=0x41c6ce57^str.length;
 function rng(seed){ let a=hash(seed); return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}; }
 function shuffled(list, seed){ const a=list.slice(), r=rng(seed);
   for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-// 通信なし：ラウンドごとに、全員に重ならないお題を配る（前のラウンドとも重ならない）
-// 1ラウンドで 本番 n 枚 ＋ パス用 n 枚 を使う。gh = ラウンドごとのジャンル番号の配列
-function topicsFor(code, round, gh){
-  const d=decode(code), g = gh && gh[round]!=null ? gh[round] : d.g;
-  const k = gh && gh[round]!=null ? gh.slice(0,round).filter(x=>x===g).length : round;   // そのジャンルで遊んだ回数
-  const list=listFor(g, d.easy), n=d.n, per=Math.max(1, Math.floor(list.length/(2*n)));
-  const deck=shuffled(list, "odeko:"+code+":"+(g===d.g?"":g+":")+Math.floor(k/per)), at=(k%per)*2*n;
-  return {main:deck.slice(at, at+n), spare:deck.slice(at+n, at+2*n)};
-}
-// 通信あり：ラウンドごとに人数が変わってもOKな配り方（gh=ジャンル, nh=人数）
-function topicsOnline(seed, gh, nh, round, easy){
-  const g=gh[round], list=listFor(g, easy), L=list.length; let pos=0, cyc=0;
-  const fit=c=>{ if(pos+c>L){ cyc++; pos=0; } };
-  for(let r=0;r<round;r++) if(gh[r]===g){ const c=2*(nh[r]||0); fit(c); pos+=c; }
-  const n=nh[round]||0; fit(2*n);
-  const deck=shuffled(list, "on:"+seed+":"+g+":"+(easy?"e":"")+cyc);
-  return {main:deck.slice(pos, pos+n), spare:deck.slice(pos+n, pos+2*n)};
+// ラウンド0から順に配っていく。1ラウンドで 本番 n 枚 ＋ パス用 n 枚。
+// 同じジャンルで前に出たお題（ふつう・かんたん どちらで出たものも）は使わない。使い切ったら最初から。
+// gh=ジャンル、eh=かんたんか、nh=人数（すべてラウンドごと）。同じ部屋なら全員同じ結果になる
+let dealCache={key:null, val:null};
+function dealAll(seed, gh, eh, nh, upto){
+  const key=JSON.stringify([seed, gh.slice(0,upto+1), eh.slice(0,upto+1), nh.slice(0,upto+1)]);
+  if(dealCache.key===key) return dealCache.val;
+  const used={}, out=[];
+  for(let r=0;r<=upto;r++){
+    const g=gh[r], easy=!!eh[r], n=nh[r]||0, u=(used[g]=used[g]||new Set());
+    let pool=listFor(g, easy).filter(t=>!u.has(t[0]));
+    if(pool.length<2*n){ u.clear(); pool=listFor(g, easy).slice(); }
+    const deck=shuffled(pool, seed+":"+r+":"+g+(easy?"e":""));
+    const main=deck.slice(0,n), spare=deck.slice(n,2*n);
+    main.concat(spare).forEach(t=>u.add(t[0]));
+    out.push({main, spare});
+  }
+  dealCache={key, val:out}; return out;
 }
 
 // おまかせ（部屋番号とラウンドが同じなら全員同じジャンル）
@@ -693,11 +695,17 @@ function hist(){
 const curGenre = () => GENRES[hist()[S.round]];
 // パスした人は予備のお題に入れかわる
 function topicsAt(r){
-  const d = S.online ? topicsOnline(S.seed, S.gh, S.nh, r, S.easy) : topicsFor(S.code, r, hist());
+  const d = S.online ? dealAll("on:"+S.seed, S.gh, S.eh, S.nh, r)[r]
+    : dealAll("odeko:"+S.code, hist(), ehist(), hist().map(()=>countOf(S.code)), r)[r];
   const passed = r===S.round ? (S.passUsed||{}) : ((S.passHist||[])[r]||{});
   return d.main.map((t,i)=> passed[i+1] && d.spare[i] ? d.spare[i] : t);
 }
-const isEasy = () => S.online ? !!S.easy : !!(decode(S.code)||{}).easy;
+// ラウンドごとの「かんたん」（通信なしは各自のスマホで同じものを選ぶ）
+function ehist(){
+  if(S.online) return S.eh;
+  S.eHist = S.eHist || []; while(S.eHist.length<=S.round) S.eHist.push(S.eHist.length ? S.eHist[S.eHist.length-1] : !!decode(S.code).easy); return S.eHist;
+}
+const isEasy = () => !!ehist()[S.round];
 const topicsNow = () => topicsAt(S.round);
 const now = () => S.online && NET ? NET.now() : Date.now();
 
@@ -912,7 +920,8 @@ function applyRoom(room){
   S.names={}; S.players.forEach(p=>{ S.names[p.num]=p.name; });
   S.phase=st.phase||"lobby"; S.round=st.round||0; S.baseG=room.baseG||0; S.seed=S.code+":"+(room.created||0); S.easy=!!room.easy;
   S.gh=byRound(st.gh); S.nh=byRound(st.nh); if(S.gh[0]==null) S.gh[0]=S.baseG;
-  for(let r=1;r<=S.round;r++){ if(S.gh[r]==null) S.gh[r]=S.gh[r-1]; if(S.nh[r]==null) S.nh[r]=S.nh[r-1]; }
+  S.eh=byRound(st.eh).map(Boolean); if(S.eh[0]==null) S.eh[0]=S.easy;
+  for(let r=1;r<=S.round;r++){ if(S.gh[r]==null) S.gh[r]=S.gh[r-1]; if(S.nh[r]==null) S.nh[r]=S.nh[r-1]; if(S.eh[r]==null) S.eh[r]=S.eh[r-1]; }
   const rounds=byRound(room.rounds), cur=parseRound(rounds[S.round]);
   S.passUsed=cur.pass; S.passHist=rounds.map(rd=>parseRound(rd).pass);
   S.ranks=cur.ranks; S.gave=cur.gave; S.miss=cur.miss; S.hintUsed=cur.hint; S.hint=!!cur.hint[S.num]; S.start=cur.start;
@@ -930,7 +939,7 @@ function applyRoom(room){
   if((prevPhase==="lobby") || (prevRound!=null && prevRound!==S.round)){
     closeForehead(); $("gpick").classList.remove("on"); $("sheet").classList.remove("on"); myPrev=null;
     renderReady(); go("s-ready");
-    toast(prevPhase==="lobby" ? "ゲームスタート！" : `ラウンド${S.round+1}：${curGenre().icon} ${curGenre().name}`);
+    toast(prevPhase==="lobby" ? "ゲームスタート！" : `ラウンド${S.round+1}：${curGenre().icon} ${curGenre().name}${isEasy()?"・かんたん":""}`);
     return;
   }
   if(onScreen("s-lobby")){ renderReady(); go("s-ready"); }
@@ -964,7 +973,7 @@ function startGame(){
     if(ps.length<2) return;
     ps.forEach(([id],i)=>{ room.players[id].num=i+1; });         // 番号を1から詰める
     const g = st.gh && st.gh.r0!=null ? st.gh.r0 : room.baseG;
-    room.state={phase:"play", round:0, gh:{r0:g}, nh:{r0:ps.length}};
+    room.state={phase:"play", round:0, gh:{r0:g}, nh:{r0:ps.length}, eh:{r0:!!room.easy}};
     room.rounds={r0:{start:t}};
     return room;
   }).catch(()=>toast("通信できませんでした"));
@@ -1263,17 +1272,20 @@ function rename(p){
       S.names[p]=v; save(); renderBoard();
     }});
 }
-let gpSel=0, gpMode="next";
+let gpSel=0, gpMode="next", gpEasy=false;
 function nextRound(){
   fix();
   const left = roundResults().filter(r=>r.s==="play").length;
-  gpSel = hist()[S.round]; gpMode="next";
+  gpSel = hist()[S.round]; gpMode="next"; gpEasy = isEasy();
   $("gp-title").textContent = `ラウンド${S.round+2}のジャンル`;
   $("gp-sub").textContent = (left ? `まだ${left}人が決着していません。` : "")
-    + (S.online ? "選んだジャンルで、全員のスマホが次のラウンドに進みます" : "全員のスマホで同じジャンルを選んでね");
+    + (S.online ? "選んだジャンルとむずかしさで、全員のスマホが次のラウンドに進みます" : "全員のスマホで同じジャンルとむずかしさを選んでね");
   renderGpick(); $("gpick").classList.add("on");
 }
 function renderGpick(){
+  $("gp-level").style.display = gpMode==="next" ? "grid" : "none";
+  $("gp-level").innerHTML = [[false,"🔥","ふつう"],[true,"🌱","かんたん"]].map(([e,ic,l])=>
+    `<div class="gchip ${gpEasy===e?'sel':''}" style="--gc:${e?'#9BE15D':'#FFD23F'}" onclick="gpEasy=${e};renderGpick()"><span class="ge">${ic}</span>${l}</div>`).join("");
   $("gp-list").innerHTML = GENRES.map((g,i)=>
     `<div class="gchip ${i===gpSel?'sel':''}" style="--gc:${g.color}" onclick="gpSel=${i};renderGpick()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("")
     + `<div class="gchip ${gpSel===-1?'sel':''}" style="--gc:#FFD23F" onclick="gpSel=-1;renderGpick()"><span class="ge">🎲</span>おまかせ</div>`;
@@ -1294,6 +1306,7 @@ function confirmNextRound(){
       const st=room.state; if(!st || st.phase!=="play" || (st.round||0)!==expected) return;   // ほかの人が先に進めた
       const nr=expected+1;
       st.round=nr; st.gh=st.gh||{}; st.nh=st.nh||{};
+      st.eh=st.eh||{}; st.eh[rk(nr)]=gpEasy;
       st.gh[rk(nr)]=g; st.nh[rk(nr)]=Object.values(room.players||{}).filter(Boolean).length;   // 途中参加の人もここから入る
       room.rounds=room.rounds||{}; room.rounds[rk(nr)]={start:t};
       return room;
@@ -1301,10 +1314,10 @@ function confirmNextRound(){
     return;
   }
   S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
-  hist(); S.round++; S.gHist[S.round]=g;
+  hist(); ehist(); S.round++; S.gHist[S.round]=g; S.eHist[S.round]=gpEasy;
   S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; S.passUsed={}; save();
   renderReady(); go("s-ready");
-  toast(`ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}`);
+  toast(`ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}${gpEasy?"・かんたん":""}`);
 }
 
 // ===== リアクション（通信あり：全員のスマホに表示して音を鳴らす） =====
