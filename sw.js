@@ -1,11 +1,12 @@
 // 電波がなくても遊べるようにするための保存設定
 // サイトを更新したら VERSION の数字を1つ上げると、みんなのスマホに新しい版が届きます
-const VERSION = "v7";
+const VERSION = "v8";
 const CACHE = "odeko-" + VERSION;
 const CORE = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./lib/qrcode.min.js",
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

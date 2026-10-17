@@ -239,6 +239,31 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
 #react-pop .rt{font-family:var(--display);font-size:30px;line-height:1.2}
 #react-pop .rf{font-size:13px;color:var(--muted)}
 @keyframes rpop{0%{opacity:0;transform:translateX(-50%) scale(.5)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}
+/* QR・実況・練習・ワードウルフ・シーズン */
+.qr svg{width:170px;height:170px;display:block;margin:12px auto 4px;background:#fff;border-radius:8px}
+.qr-note{font-size:12px;color:var(--muted);text-align:center;margin:0}
+#qr-ov{position:fixed;inset:0;background:rgba(26,16,51,.75);display:none;align-items:center;justify-content:center;z-index:41;padding:16px}
+#qr-ov.on{display:flex}
+#qr-ov .card{text-align:center;max-width:340px;width:100%;margin:0}
+.tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:4px 0 10px}
+.tools button{border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:8px 14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;min-height:40px}
+.steps{padding-left:22px;margin:0;line-height:1.8;font-size:15px;font-weight:500}
+.steps b{font-weight:800}
+.wordbtn{width:100%;min-height:150px;border:4px dashed var(--ink);border-radius:20px;background:#FFF8DA;font-family:var(--body);font-weight:800;font-size:18px;color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+.wordbtn.open{border-style:solid;background:#fff;color:var(--ink);font-family:var(--display);font-weight:400;font-size:44px}
+.timer{font-family:var(--display);font-size:64px;line-height:1.1;margin:4px 0 8px}
+.timer.end{color:var(--red)}
+.vbtn{display:flex;align-items:center;gap:10px;width:100%;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:8px 12px;margin:0 0 8px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 var(--ink)}
+.vbtn.sel{background:var(--red);color:#fff;transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.vbtn .pnum{width:30px;height:30px;font-size:14px}
+.vbtn .cnt{margin-left:auto;font-size:13px}
+.words{font-size:16px;line-height:1.8;margin:6px 0}
+.words b{font-family:var(--display);font-weight:400;font-size:22px}
+.bonus{font-size:12px;color:#C2410C;margin-left:4px;font-weight:800}
+#season h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0 0 6px}
+.mchips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.mchips button{border:2px solid var(--ink);border-radius:999px;background:#fff;padding:3px 10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.mchips button.sel{background:var(--yellow)}
 .small-btn{padding:10px;font-size:15px;margin:4px 0 0}
 .pass-used{display:inline-block;background:#E3F4FF;border-radius:999px;padding:0 8px;font-size:12px;margin-left:4px}
 
@@ -275,6 +300,14 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <p id="mode-note"></p>
   <button class="btn red" onclick="startCreate()">部屋を作る</button>
   <button class="btn yellow" onclick="startJoin()">番号で参加する</button>
+  <button class="btn" onclick="go('s-practice');$('pr-done').style.display='none'">🔰 はじめての人は練習（30秒）</button>
+
+  <div class="card" id="season" style="display:none;margin-top:18px">
+    <h3>🏆 今月のランキング</h3>
+    <div class="mchips" id="season-months"></div>
+    <div id="season-list"></div>
+    <p class="qr-note" style="margin-top:8px">このスマホで遊んだ結果を名前ごとに合計しています。<button class="link" style="color:var(--muted);font-size:12px;padding:2px" onclick="resetSeason()">記録を消す</button></p>
+  </div>
 
   <details>
     <summary>あそびかた</summary>
@@ -288,8 +321,31 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
       <li>行きづまったら「💡ヒント」。1ラウンドに1回だけ、文字数と最初の1文字がわかる。</li>
       <li>全員で「次のラウンドへ」を押して、同じジャンルを選ぶと次のお題が配られる（前と重なりません）。「おまかせ」なら全員同じジャンルがランダムで決まる。</li>
       <li>電波がないときは「通信なし」に切り替え。部屋を作る人が人数を決め、番号は各自で選び、記録は1台でまとめます。</li>
+      <li>2連続で1位になると連続ボーナス（2連続で＋2点、3連続で＋3点…）。</li>
+      <li>通信ありなら「📝お題リクエスト」で好きな言葉をお題に混ぜられます（入れた本人には出ません）。</li>
+      <li>🐺ワードウルフ：部屋を作るときに選べる別の遊び方。1人だけちがうお題の「ウルフ」を話し合って探します。</li>
     </ol>
   </details>
+</section>
+
+<!-- 練習 -->
+<section class="screen" id="s-practice">
+  <div class="topbar"><button class="link" onclick="go('s-home')">‹ ホーム</button></div>
+  <h2 class="telop">30秒で練習</h2>
+  <div class="card">
+    <ol class="steps">
+      <li><b>おでこに当てる</b>：「練習スタート」を押したら、3秒以内に画面を外向きにしておでこへ。</li>
+      <li><b>質問する</b>：「生き物？」「食べられる？」など、はい・いいえで答えられる質問をまわりの人にする。</li>
+      <li><b>答えを言う</b>：わかったら言ってみる。まわりの人が「⭕正解」か「❌ハズレ」を押してくれる。</li>
+      <li><b>ひとりのとき</b>：3秒たったら画面を見て、ボタンを押して試してOK。</li>
+    </ol>
+  </div>
+  <div class="card result-card" id="pr-done" style="display:none">
+    <h3>練習クリア！</h3>
+    <p style="margin:0;font-weight:500">本番は「部屋を作る」から。ヒント・パス・記録ボードも使えます。</p>
+  </div>
+  <button class="btn red" onclick="startPractice()">練習スタート</button>
+  <button class="btn" onclick="go('s-home')">ホームにもどる</button>
 </section>
 
 <!-- 部屋を作る -->
@@ -297,10 +353,14 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div class="topbar"><button class="link" onclick="go('s-home')">‹ ホーム</button></div>
   <h2 class="telop">部屋を作る</h2>
   <div class="card">
+    <p class="label">あそびかた</p>
+    <div class="genres" id="game-list"></div>
+  </div>
+  <div class="card" id="genre-card">
     <p class="label">ジャンル</p>
     <div class="genres" id="genre-list"></div>
   </div>
-  <div class="card">
+  <div class="card" id="level-card">
     <p class="label">むずかしさ</p>
     <div class="genres" id="level-list"></div>
   </div>
@@ -355,12 +415,16 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div class="card stage">
     <p class="label">部屋番号</p>
     <div class="tiles" id="l-tiles"></div>
-    <div class="badges"><span class="badge g" id="l-genre"></span><span class="badge" id="l-level"></span></div>
+    <div class="qr" id="l-qr"></div>
+    <p class="qr-note">カメラで読むと参加できます</p>
+    <div class="badges"><span class="badge" id="l-game"></span><span class="badge g" id="l-genre"></span><span class="badge" id="l-level"></span></div>
     <div class="row2" style="margin-top:8px">
       <button class="btn" onclick="shareRoom()">招待する</button>
-      <button class="btn" onclick="changeLobbyGenre()">ジャンル変更</button>
+      <button class="btn" id="l-genrebtn" onclick="changeLobbyGenre()">ジャンル変更</button>
     </div>
     <button class="btn small-btn" id="l-easy" onclick="toggleEasy()"></button>
+    <button class="btn small-btn" id="l-gamebtn" onclick="toggleGame()"></button>
+    <button class="btn small-btn" id="l-req" onclick="addRequest()">📝 お題リクエスト</button>
   </div>
   <div class="card">
     <p class="label" id="l-count"></p>
@@ -391,6 +455,11 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
     <div class="you" id="r-num"></div>
   </div>
   <p class="sub" style="margin-top:0" id="r-note">全員のラウンドがそろっているか確認してね</p>
+  <div class="tools">
+    <button id="r-voice" onclick="voiceBtn()"></button>
+    <button class="online-only" onclick="showQR()">📷 招待QR</button>
+    <button class="online-only" id="r-req" onclick="addRequest()">📝 お題リクエスト</button>
+  </div>
   <button class="btn red" id="r-start" onclick="startForehead()">おでこにセット</button>
   <div class="row2">
     <button class="btn yellow" id="r-hint" onclick="useHint()">💡 ヒント</button>
@@ -401,6 +470,63 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div class="row2">
     <button class="btn" onclick="openBoard()">記録ボード</button>
     <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
+  </div>
+</section>
+
+<!-- ワードウルフ -->
+<section class="screen" id="s-wolf">
+  <div class="topbar">
+    <button class="link" onclick="go('s-home');renderHome()">‹ ホーム</button>
+    <button class="link" onclick="leaveRoom()">部屋を出る</button>
+  </div>
+  <h2 class="telop">ワードウルフ</h2>
+  <div class="card stage">
+    <div class="badges" style="margin-top:0">
+      <span class="badge" id="w-code"></span>
+      <span class="badge" id="w-round"></span>
+      <span class="badge" id="w-net" style="display:none"></span>
+    </div>
+    <div class="you" id="w-num" style="margin-top:8px"></div>
+  </div>
+  <p class="sub" style="margin-top:0" id="w-note"></p>
+  <div class="tools">
+    <button id="w-voice" onclick="voiceBtn()"></button>
+    <button class="online-only" onclick="showQR()">📷 招待QR</button>
+  </div>
+  <div class="card stage" id="w-wordcard">
+    <p class="label">あなたのお題（ほかの人に見せないでね）</p>
+    <button class="wordbtn" id="w-word" type="button">👆 おしている間だけ見えます</button>
+  </div>
+  <div class="card stage">
+    <p class="label">話し合いタイム（3分）</p>
+    <div class="timer" id="w-timer">3:00</div>
+    <button class="btn" id="w-talk" onclick="startTalk()">話し合いスタート</button>
+  </div>
+  <div class="card" id="w-votecard">
+    <p class="label">ウルフだと思う人に投票</p>
+    <div id="w-votes"></div>
+    <p class="qr-note" id="w-vstat"></p>
+  </div>
+  <button class="btn red" id="w-reveal" onclick="revealWolf()">結果発表</button>
+  <div class="card result-card" id="w-result" style="display:none">
+    <h3 id="w-res-title"></h3>
+    <div class="words" id="w-res-words"></div>
+    <div id="w-res-tally"></div>
+    <div class="row2" id="w-offjudge">
+      <button class="btn red" onclick="wolfOutcome('caught')">つかまえた！</button>
+      <button class="btn" onclick="wolfOutcome('escaped')">逃げられた…</button>
+    </div>
+    <p style="margin:6px 0 0;font-weight:800" id="w-res-out"></p>
+  </div>
+  <div class="online-only"><p class="reacts-label">リアクション</p><div class="reacts"></div></div>
+  <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
+  <div class="card" id="w-total-card" style="display:none;margin-top:16px">
+    <p class="label">総合ランキング（つかまえたら村人に1点＋ウルフに投票した人は＋1点、逃げ切ったらウルフに3点）</p>
+    <div id="w-total"></div>
+  </div>
+  <div class="card" id="w-hist-card" style="display:none;margin-top:16px">
+    <p class="label">これまでの結果</p>
+    <div class="hist" id="w-hist"></div>
   </div>
 </section>
 
@@ -417,7 +543,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div id="b-list"></div>
   <button class="btn mint" onclick="nextRound()">次のラウンドへ</button>
   <div class="card" id="total-card" style="display:none;margin-top:16px">
-    <p class="label">総合ランキング（1位は人数と同じ点、順位が1つ下がるごとに1点減る。ギブアップは0点）</p>
+    <p class="label">総合ランキング（1位は人数と同じ点、順位が1つ下がるごとに1点減る。ギブアップは0点。2連続1位から連続ボーナス🔥）</p>
     <div id="total"></div>
   </div>
   <div class="card" id="hist-card" style="display:none;margin-top:16px">
@@ -453,7 +579,7 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   <div class="ans" id="fr-ans"></div>
   <p class="sub" id="fr-sub" style="margin:0 0 8px"></p>
   <div class="online-only" style="width:100%;max-width:340px"><p class="reacts-label">みんなにリアクション</p><div class="reacts"></div></div>
-  <button class="btn yellow" onclick="openBoard()">記録ボードを見る</button>
+  <button class="btn yellow" id="fr-board" onclick="openBoard()">記録ボードを見る</button>
   <button class="btn clear" onclick="$('fh-result').classList.remove('on');toReady()">準備画面にもどる</button>
 </div>
 <div id="fh-cover">
@@ -494,10 +620,17 @@ input.namein{width:100%;font-family:var(--body);font-weight:800;font-size:20px;p
   </div>
   <button class="btn clear" style="color:var(--muted);border-color:transparent;margin:0" onclick="$('gpick').classList.remove('on')">やめる</button>
 </div></div>
+ <div id="qr-ov" role="dialog" aria-modal="true" onclick="if(event.target===this)this.classList.remove('on')"><div class="card">
+  <p class="label">カメラで読むと参加できます</p>
+  <div class="qr" id="qr-big"></div>
+  <div class="tiles" id="qr-tiles" style="margin-top:8px"></div>
+  <button class="btn" onclick="$('qr-ov').classList.remove('on')">閉じる</button>
+</div></div>
 <div id="react-pop" aria-live="polite"><div class="rt" id="rp-text"></div><div class="rf" id="rp-from"></div></div>
 <canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
 
+<script src="lib/qrcode.min.js"></script>
 <script>
 // ===== お題リスト（[言葉, 絵文字]。ここを編集すれば自由に追加できます） =====
 const GENRES = [
@@ -572,7 +705,7 @@ const GENRES = [
   {name:"数字", icon:"🔢", color:"#7FD8FF", topics: Array.from({length:100}, (_, i) => [String(i+1), ""])}  // 1〜100
 ];
 const COMBOS = GENRES.length * 7;                 // ジャンル × 人数(2〜8)
-const MAXSEED = Math.floor(10000 / (COMBOS*2));   // 4ケタに収まる部屋の数（×2 は かんたん／ふつう）
+const MAXSEED = Math.floor(10000 / (COMBOS*4));   // 4ケタに収まる部屋の数（×4 は かんたん／ふつう × おでこ／ワードウルフ）
 // かんたんモードで出すお題（知っている人が多いもの）。数字は1〜20
 const EASY = {
   "動物": ["犬","猫","ライオン","ゾウ","キリン","パンダ","ペンギン","コアラ","ウサギ","サル","ゴリラ","トラ","クマ","ウマ","ウシ","ブタ","ニワトリ","イルカ","クジラ","サメ","タコ","カメ","ワニ","ヘビ","カエル","シマウマ","ネズミ","カニ"],
@@ -586,6 +719,14 @@ const EASY = {
   "お笑い芸人": ["ダウンタウン","明石家さんま","ビートたけし","タモリ","とんねるず","ナインティナイン","サンドウィッチマン","千鳥","かまいたち","霜降り明星","ぺこぱ","EXIT","オードリー","爆笑問題","くりぃむしちゅー","出川哲朗","有吉弘行","渡辺直美","ゆりやんレトリィバァ","イモトアヤコ","小島よしお","錦鯉","ナイツ","バナナマン"],
   "数字": Array.from({length:20}, (_, i) => String(i+1))
 };
+// ワードウルフのお題（どちらが「みんな」でどちらが「ウルフ」かはラウンドごとにランダム）
+const WOLF_PAIRS = [["ラーメン","うどん"],["犬","猫"],["コーヒー","紅茶"],["海","プール"],["カレーライス","ハヤシライス"],["スマホ","パソコン"],
+  ["夏","冬"],["サッカー","バスケットボール"],["マクドナルド","モスバーガー"],["ディズニーランド","USJ"],["寿司","刺身"],["温泉","銭湯"],
+  ["新幹線","飛行機"],["映画館","カラオケ"],["焼き肉","焼き鳥"],["パン","ごはん"],["ビール","ハイボール"],["お正月","クリスマス"],
+  ["コンビニ","スーパー"],["遊園地","動物園"],["電車","バス"],["ケーキ","アイスクリーム"],["ピアノ","ギター"],["雨","雪"],
+  ["朝ごはん","晩ごはん"],["シャワー","お風呂"],["キャンプ","バーベキュー"],["野球","ソフトボール"],["Instagram","TikTok"],["LINE","メール"],
+  ["枕","布団"],["チョコレート","クッキー"],["牛丼","親子丼"],["卒業式","入学式"],["山","川"],["ハンバーガー","サンドイッチ"],
+  ["タクシー","レンタカー"],["花火","お祭り"],["結婚式","誕生日パーティー"],["サウナ","岩盤浴"]];
 const listFor = (g, easy) => easy ? GENRES[g].topics.filter(t => (EASY[GENRES[g].name]||[]).includes(t[0])) : GENRES[g].topics;
 
 
@@ -636,21 +777,25 @@ function initNet(){
 // ===== 状態 =====
 let S = load() || {};
 let MODE = "online";                 // online=通信あり / offline=通信なし
-let pickGenre = 0, pickCount = 4, pickNum = 0, pickEasy = false;
+let pickGenre = 0, pickCount = 4, pickNum = 0, pickEasy = false, pickWolf = false;
+let PRACTICE = null;                 // 練習中のお題
 let fhTimer = null, wakeLock = null, lastTap = 0;
-function save(){ try{ const {raw, ...rest}=S; localStorage.setItem("odeko2", JSON.stringify(rest)); }catch(e){} }
+function save(){
+  try{ const {raw, ...rest}=S; localStorage.setItem("odeko2", JSON.stringify(rest)); }catch(e){}
+  if(!S.online && S.code){ try{ announceCheck(); }catch(e){} }
+}
 function load(){ try{ return JSON.parse(localStorage.getItem("odeko2")); }catch(e){ return null; } }
 const PID = (()=>{ try{ let p=localStorage.getItem("odeko_pid"); if(!p){ p=Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem("odeko_pid",p); } return p; }catch(e){ return "p"+Math.random().toString(36).slice(2); } })();
 function myName(){ try{ return localStorage.getItem("odeko_name")||""; }catch(e){ return ""; } }
 function saveName(v){ try{ localStorage.setItem("odeko_name", v); }catch(e){} }
 
 // ===== 部屋番号（通信なしモード：4ケタにジャンルと人数を埋め込む） =====
-function makeCode(g, n, easy){ const seed=Math.floor(Math.random()*MAXSEED); return String(seed*COMBOS*2 + (easy?COMBOS:0) + g*7 + (n-2)).padStart(4,"0"); }
+function makeCode(g, n, easy, wolf){ const seed=Math.floor(Math.random()*MAXSEED); return String(seed*COMBOS*4 + (wolf?COMBOS*2:0) + (easy?COMBOS:0) + g*7 + (n-2)).padStart(4,"0"); }
 function decode(code){
   if(!/^\d{4}$/.test(code)) return null;
-  const v=parseInt(code,10); if(v >= MAXSEED*COMBOS*2) return null;
-  let r=v%(COMBOS*2); const easy=r>=COMBOS; r%=COMBOS;
-  return {g:Math.floor(r/7), n:r%7+2, easy};
+  const v=parseInt(code,10); if(v >= MAXSEED*COMBOS*4) return null;
+  let r=v%(COMBOS*4); const wolf=r>=COMBOS*2; r%=COMBOS*2; const easy=r>=COMBOS; r%=COMBOS;
+  return {g:Math.floor(r/7), n:r%7+2, easy, wolf};
 }
 const genreOf = code => GENRES[decode(code).g];
 const countOf = code => decode(code).n;
@@ -700,13 +845,44 @@ function hist(){
   S.gHist = S.gHist || []; while(S.gHist.length<=S.round) S.gHist.push(S.gHist.length ? S.gHist[S.gHist.length-1] : decode(S.code).g); return S.gHist;
 }
 const curGenre = () => GENRES[hist()[S.round]];
-// パスした人は予備のお題に入れかわる
+// リクエストされたお題が入り、パスした人は予備のお題に入れかわる
 function topicsAt(r){
   const d = S.online ? dealAll("on:"+S.seed, S.gh, S.eh, S.nh, r)[r]
     : dealAll("odeko:"+S.code, hist(), ehist(), hist().map(()=>countOf(S.code)), r)[r];
+  const req = S.online ? (reqPlan(r).plan[r]||{}) : {};
   const passed = r===S.round ? (S.passUsed||{}) : ((S.passHist||[])[r]||{});
-  return d.main.map((t,i)=> passed[i+1] && d.spare[i] ? d.spare[i] : t);
+  return d.main.map((t,i)=> passed[i+1] && d.spare[i] ? d.spare[i] : req[i]!=null ? [req[i], "📝"] : t);
 }
+// お題リクエスト：入れたラウンドの次から、1ラウンドに人数の半分まで混ぜる。入れた本人には配らない
+let reqCache={key:null, val:null};
+function reqPlan(upto){
+  const numOf={}; (S.players||[]).forEach(p=>{ numOf[p.id]=p.num; });
+  const reqs=S.reqs||[], key=JSON.stringify([S.seed, reqs, (S.nh||[]).slice(0,upto+1), numOf]);
+  if(reqCache.key===key) return reqCache.val;
+  const used=new Set(), plan=[];
+  for(let r=0;r<=upto;r++){
+    const n=(S.nh||[])[r]||0, take={}; let left=Math.floor(n/2);
+    const order=shuffled([...Array(n).keys()], "req:"+S.seed+":"+r);
+    for(const q of reqs){
+      if(left<=0) break;
+      if(used.has(q.id) || q.r>=r) continue;
+      const i=order.find(i=>take[i]==null && numOf[q.by]!==i+1); if(i==null) continue;
+      take[i]=q.w; used.add(q.id); left--;
+    }
+    plan.push(take);
+  }
+  reqCache={key, val:{plan, used}}; return reqCache.val;
+}
+function addRequest(){
+  if(!S.online || !NET) return;
+  ask({title:"📝 お題リクエスト", text:"お題にしたい言葉を入れてね。次のラウンドから混ざります（あなたには出ません）", input:"", ok:"入れる", onOk:v=>{
+    const w=v.trim().slice(0,20); if(!w){ toast("言葉を入れてね"); return; }
+    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    NET.set(`rooms/${S.code}/req/${id}`, {w, by:PID, r: S.phase==="play" ? S.round : -1})
+      .then(()=>toast("リクエストを入れました")).catch(()=>toast("通信できませんでした"));
+  }});
+}
+function pendingReqs(){ if(!S.online || !S.reqs) return 0; const {used}=reqPlan(S.round); return S.reqs.filter(q=>!used.has(q.id)).length; }
 // ラウンドごとの「かんたん」（通信なしは各自のスマホで同じものを選ぶ）
 function ehist(){
   if(S.online) return S.eh;
@@ -715,6 +891,10 @@ function ehist(){
 const isEasy = () => !!ehist()[S.round];
 const topicsNow = () => topicsAt(S.round);
 const now = () => S.online && NET ? NET.now() : Date.now();
+const isWolf = () => S.online ? S.game==="wolf" : !!(decode(S.code)||{}).wolf;
+const gameScreen = () => isWolf() ? "s-wolf" : "s-ready";
+function renderGame(){ isWolf() ? renderWolf() : renderReady(); }
+function goGame(){ renderGame(); go(gameScreen()); }
 
 // ===== 確認ダイアログ（ブラウザ標準のconfirmはLINEなどのアプリ内ブラウザで動かないため自作） =====
 function ask({title, text="", ok="OK", input=null, onOk}){
@@ -740,14 +920,15 @@ function renderHome(){
   $("resume").style.display = hasRoom() ? "flex" : "none";
   if(hasRoom()) $("resume-info").textContent = S.online
     ? `部屋 ${S.code}・通信あり${S.round!=null && S.phase==="play" ? `・ラウンド${S.round+1}` : ""}`
-    : `部屋 ${S.code}・${curGenre().name}・ラウンド${S.round+1}`;
+    : `部屋 ${S.code}・${isWolf() ? "ワードウルフ" : curGenre().name}・ラウンド${S.round+1}`;
+  renderSeason();
 }
 function resume(){
   if(S.online){
     if(!NET){ toast("いまは通信できません"); return; }
     renderLobbyLoading(); go("s-lobby"); subscribe(S.code); return;
   }
-  renderReady(); go("s-ready");
+  goGame();
 }
 function startCreate(){ renderCreate(); go("s-create"); }
 function startJoin(){ openJoin("", false); }
@@ -764,6 +945,10 @@ function startJoin(){ openJoin("", false); }
 
 // ===== 部屋を作る =====
 function renderCreate(){
+  $("game-list").innerHTML = [[false,"🙈","おでこ当て"],[true,"🐺","ワードウルフ"]].map(([w,ic,l])=>
+    `<div class="gchip ${pickWolf===w?'sel':''}" style="--gc:${w?'#B39DFF':'#FF7AA2'}" onclick="pickWolf=${w};renderCreate()"><span class="ge">${ic}</span>${l}</div>`).join("");
+  $("genre-card").style.display = pickWolf ? "none" : "block";
+  $("level-card").style.display = pickWolf ? "none" : "block";
   $("genre-list").innerHTML = GENRES.map((g,i)=>
     `<div class="gchip ${i===pickGenre?'sel':''}" style="--gc:${g.color}" onclick="pickGenre=${i};renderCreate()"><span class="ge">${g.icon}</span>${g.name}</div>`).join("");
   let h=""; for(let n=2;n<=8;n++) h+=`<div class="nchip ${n===pickCount?'sel':''}" onclick="pickCount=${n};renderCreate()">${n}<small>人</small></div>`;
@@ -778,7 +963,7 @@ function renderCreate(){
 }
 function createRoom(){
   if(MODE==="online") return createOnline();
-  openJoin(makeCode(pickGenre,pickCount,pickEasy), true);
+  openJoin(makeCode(pickGenre,pickCount,pickEasy,pickWolf), true);
 }
 
 // ===== 参加 =====
@@ -787,7 +972,7 @@ function openJoin(code, created){
   pickNum = 0;
   $("join-created").style.display = created ? "block" : "none";
   $("join-input").style.display = created ? "none" : "block";
-  if(created){ $("created-tiles").innerHTML = tiles(code); $("created-desc").textContent = `${genreOf(code).name}・${countOf(code)}人${decode(code).easy?"・かんたん":""}`; }
+  if(created){ $("created-tiles").innerHTML = tiles(code); $("created-desc").textContent = decode(code).wolf ? `🐺 ワードウルフ・${countOf(code)}人` : `${genreOf(code).name}・${countOf(code)}人${decode(code).easy?"・かんたん":""}`; }
   $("code-in").value = code;
   $("jname-card").style.display = MODE==="online" ? "block" : "none";
   if(MODE==="online" && !$("jname-in").value) $("jname-in").value = myName();
@@ -811,7 +996,7 @@ function onCodeInput(){
           joinRoomInfo={code, full: ps.length>=8 && !mine};
           m.className = "msg " + (joinRoomInfo.full ? "ng" : "ok");
           m.textContent = joinRoomInfo.full ? "満員です（8人まで）"
-            : `${g.icon} ${g.name}の部屋・${ps.length}人参加中` + (st.phase==="play" && !mine ? "（ゲーム中なので次のラウンドから参加）" : "");
+            : `${room.game==="wolf" ? "🐺 ワードウルフ" : g.icon+" "+g.name}の部屋・${ps.length}人参加中` + (st.phase==="play" && !mine ? "（ゲーム中なので次のラウンドから参加）" : "");
         }
         updateJoinBtn();
       }).catch(()=>{ if(my===codeCheck){ m.className="msg ng"; m.textContent="通信できませんでした"; } });
@@ -820,7 +1005,7 @@ function onCodeInput(){
   }
   const d=decode(code);
   m.className = "msg " + (d ? "ok" : "ng");
-  m.textContent = d ? `${GENRES[d.g].name}・${d.n}人${d.easy?"・かんたん":""}の部屋` : (code.length===4 ? "その番号の部屋はありません" : "");
+  m.textContent = d ? (d.wolf ? `🐺 ワードウルフ・${d.n}人の部屋` : `${GENRES[d.g].name}・${d.n}人${d.easy?"・かんたん":""}の部屋`) : (code.length===4 ? "その番号の部屋はありません" : "");
   $("num-card").style.display = d ? "block" : "none";
   if(d){
     if(pickNum>d.n) pickNum=0;
@@ -838,7 +1023,7 @@ function joinRoom(){
   const code=$("code-in").value;
   if(S.code===code && S.num===pickNum && !S.online){ resume(); return; }   // 同じ部屋ならそのまま続き
   if(unsub){ unsub(); unsub=null; }
-  S = {code, num:pickNum, round:0, ranks:[], names:{}, history:[], start:null};
+  S = {code, num:pickNum, round:0, ranks:[], names:{}, history:[], start:null, made:Date.now()};
   save(); resume();
 }
 function leaveRoom(){
@@ -864,7 +1049,7 @@ async function createOnline(){
       const t=NET.now();
       const res=await NET.tx(`rooms/${code}`, room=>{
         if(room && room.created && t-room.created < 12*3600*1000) return;   // 使用中の番号はとばす
-        return {code, created:t, baseG:pickGenre, easy:pickEasy, players:{[PID]:{name, num:1}}, state:{phase:"lobby", round:0, gh:{r0:pickGenre}}};
+        return {code, created:t, baseG:pickGenre, easy:pickEasy, game: pickWolf ? "wolf" : "odeko", players:{[PID]:{name, num:1}}, state:{phase:"lobby", round:0, gh:{r0:pickGenre}}};
       });
       if(res.committed){ enterOnline(code); return; }
     }
@@ -913,7 +1098,8 @@ function byRound(o){ const a=[]; Object.entries(o||{}).forEach(([k,v])=>{ if(v!=
 function parseRound(rd){
   rd=rd||{};
   const wins=Object.entries(byNum(rd.wins)).map(([p,v])=>({p:+p, t:v.t||0, k:v.k||0})).sort((a,b)=>a.k-b.k);
-  return {ranks:wins.map(x=>({p:x.p, t:x.t})), gave:Object.keys(byNum(rd.gave)).map(Number), miss:byNum(rd.miss), hint:byNum(rd.hint), pass:byNum(rd.pass), start:rd.start||0};
+  return {ranks:wins.map(x=>({p:x.p, t:x.t})), gave:Object.keys(byNum(rd.gave)).map(Number), miss:byNum(rd.miss), hint:byNum(rd.hint), pass:byNum(rd.pass), start:rd.start||0,
+    votes:byNum(rd.votes), reveal:!!rd.reveal, talk:rd.talk||0};
 }
 function applyRoom(room){
   if(!room || !room.players || !room.players[PID]){
@@ -926,18 +1112,25 @@ function applyRoom(room){
   S.players=Object.entries(room.players).filter(([,p])=>p).map(([id,p])=>({id, name:p.name, num:p.num})).sort((a,b)=>a.num-b.num);
   S.names={}; S.players.forEach(p=>{ S.names[p.num]=p.name; });
   S.phase=st.phase||"lobby"; S.round=st.round||0; S.baseG=room.baseG||0; S.seed=S.code+":"+(room.created||0); S.easy=!!room.easy;
+  S.game = room.game==="wolf" ? "wolf" : "odeko"; S.announcer = room.announcer || null;
+  S.reqs = Object.entries(room.req||{}).filter(([,v])=>v && v.w).map(([id,v])=>({id, w:String(v.w).slice(0,20), by:v.by, r: v.r==null ? -1 : +v.r}))
+    .sort((a,b)=> a.r-b.r || (a.id<b.id ? -1 : 1));
   S.gh=byRound(st.gh); S.nh=byRound(st.nh); if(S.gh[0]==null) S.gh[0]=S.baseG;
   S.eh=byRound(st.eh).map(Boolean); if(S.eh[0]==null) S.eh[0]=S.easy;
   for(let r=1;r<=S.round;r++){ if(S.gh[r]==null) S.gh[r]=S.gh[r-1]; if(S.nh[r]==null) S.nh[r]=S.nh[r-1]; if(S.eh[r]==null) S.eh[r]=S.eh[r-1]; }
   const rounds=byRound(room.rounds), cur=parseRound(rounds[S.round]);
   S.passUsed=cur.pass; S.passHist=rounds.map(rd=>parseRound(rd).pass);
   S.ranks=cur.ranks; S.gave=cur.gave; S.miss=cur.miss; S.hintUsed=cur.hint; S.hint=!!cur.hint[S.num]; S.start=cur.start;
+  S.wolfData={votes:cur.votes, reveal:cur.reveal, talk:cur.talk};
   S.history=[];
   if(S.phase==="play") for(let r=0;r<S.round;r++){
     const d=parseRound(rounds[r]), n=S.nh[r]||0; if(!n) continue;
-    S.history.push({round:r+1, genre:GENRES[S.gh[r]].name, results:resultsOf(n, topicsAt(r), d.ranks, d.gave, d.miss)});
+    if(S.game==="wolf"){ const w=wolfState(r, d); S.history.push({round:r+1, genre:"ワードウルフ", wolf:{name:nameOf(w.wolf), major:w.major, minor:w.minor, caught:w.caught, decided:w.decided}, results:w.results}); }
+    else S.history.push({round:r+1, genre:GENRES[S.gh[r]].name, results:resultsOf(n, topicsAt(r), d.ranks, d.gave, d.miss)});
   }
-  save(); showOnlineOnly();
+  save(); showOnlineOnly(); recordSeason();
+  if(PRACTICE) return;
+  try{ announceCheck(); }catch(e){}
   checkReact(room.react);
 
   const prevRound=lastRound, prevPhase=lastPhase; lastRound=S.round; lastPhase=S.phase;
@@ -945,12 +1138,13 @@ function applyRoom(room){
   if(S.phase==="lobby"){ renderLobby(); if(!onScreen("s-lobby")) go("s-lobby"); return; }
   if((prevPhase==="lobby") || (prevRound!=null && prevRound!==S.round)){
     closeForehead(); $("gpick").classList.remove("on"); $("sheet").classList.remove("on"); myPrev=null;
-    renderReady(); go("s-ready");
-    toast(prevPhase==="lobby" ? "ゲームスタート！" : `ラウンド${S.round+1}：${curGenre().icon} ${curGenre().name}${isEasy()?"・かんたん":""}`);
+    goGame();
+    toast(prevPhase==="lobby" ? "ゲームスタート！" : isWolf() ? `ラウンド${S.round+1} スタート` : `ラウンド${S.round+1}：${curGenre().icon} ${curGenre().name}${isEasy()?"・かんたん":""}`);
     return;
   }
-  if(onScreen("s-lobby")){ renderReady(); go("s-ready"); }
+  if(onScreen("s-lobby")) goGame();
   if(onScreen("s-ready")) renderReady();
+  if(onScreen("s-wolf")) renderWolf();
   if(onScreen("s-board")) renderBoard();
   if($("forehead").classList.contains("on")){ showMiss(); watchMyResult(); }
 }
@@ -986,7 +1180,7 @@ function startGame(){
   }).catch(()=>toast("通信できませんでした"));
 }
 function shareRoom(){
-  const url=location.origin+location.pathname+"?room="+S.code, text=`おでこでお題当て 部屋番号 ${S.code}`;
+  const url=inviteUrl(), text=`おでこでお題当て 部屋番号 ${S.code}`;
   if(navigator.share) navigator.share({title:"おでこでお題当て", text, url}).catch(()=>{});
   else if(navigator.clipboard) navigator.clipboard.writeText(text+"\n"+url).then(()=>toast("招待リンクをコピーしました")).catch(()=>toast(url));
   else toast(url);
@@ -998,11 +1192,20 @@ function renderLobby(){
   $("l-genre").textContent=g.icon+" "+g.name; $("l-genre").style.setProperty("--gc", g.color);
   $("l-count").textContent=`${S.players.length}人が参加中（8人まで）`;
   $("l-list").innerHTML=S.players.map(p=>`<div class="lrow"><div class="pnum">${p.num}</div><b>${esc(p.name)}</b>${p.id===PID?'<span class="badge">あなた</span>':""}</div>`).join("");
+  const wolf=S.game==="wolf";
+  $("l-game").textContent = wolf ? "🐺 ワードウルフ" : "🙈 おでこ当て";
+  ["l-genre","l-level","l-genrebtn","l-easy","l-req"].forEach(id=>$(id).style.display = wolf ? "none" : "");
+  $("l-gamebtn").textContent = wolf ? "おでこ当てにする" : "🐺 ワードウルフにする";
+  $("l-qr").innerHTML = qrSvg(inviteUrl());
   $("l-level").textContent = S.easy ? "🌱 かんたん" : "🔥 ふつう";
   $("l-easy").textContent = S.easy ? "ふつうモードにする" : "かんたんモードにする";
   $("l-start").disabled = S.players.length<2;
   $("l-start").textContent = S.players.length<2 ? "あと1人以上集まったらスタート" : `${S.players.length}人でスタート`;
 }
+function toggleGame(){ NET.set(`rooms/${S.code}/game`, S.game==="wolf" ? "odeko" : "wolf").catch(()=>toast("通信できませんでした")); }
+function inviteUrl(){ return location.origin+location.pathname+"?room="+S.code; }
+function qrSvg(text){ try{ const q=qrcode(0,"M"); q.addData(text); q.make(); return q.createSvgTag({cellSize:4, margin:2, scalable:true}); }catch(e){ return ""; } }
+function showQR(){ if(!S.online) return; $("qr-big").innerHTML=qrSvg(inviteUrl()); $("qr-tiles").innerHTML=tiles(S.code); $("qr-ov").classList.add("on"); }
 function toggleEasy(){ NET.set(`rooms/${S.code}/easy`, !S.easy).catch(()=>toast("通信できませんでした")); }
 function changeLobbyGenre(){ $("gp-quick").style.display="none"; $("gp-full").style.display="block"; gpSel=S.gh[0]; gpMode="lobby"; $("gp-title").textContent="ジャンルを変える"; $("gp-sub").textContent="全員のスマホに反映されます"; renderGpick(); $("gpick").classList.add("on"); }
 
@@ -1024,8 +1227,10 @@ function renderReady(){
     : watcher ? "途中参加なので、次のラウンドから参加します。今は見学してね"
     : `${nP()}人で対戦中。ラウンドは全員自動でそろいます`;
   $("r-start").disabled = watcher; $("r-hint").disabled = watcher;
+  renderVoiceBtns();
+  const pr=pendingReqs(); $("r-req").textContent = pr ? `📝 お題リクエスト（${pr}件待ち）` : "📝 お題リクエスト";
 }
-function toReady(){ closeForehead(); renderReady(); go("s-ready"); }
+function toReady(){ if(PRACTICE){ endPractice(false); return; } closeForehead(); goGame(); }
 
 // ===== おでこ =====
 function fitTopic(){
@@ -1037,16 +1242,17 @@ function fitTopic(){
 }
 async function keepAwake(){ try{ if("wakeLock" in navigator) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){} }
 function startForehead(){
-  if(isWatcher()){ toast("次のラウンドから参加できます"); return; }
+  if(!PRACTICE && isWatcher()){ toast("次のラウンドから参加できます"); return; }
   $("fh-cover").classList.remove("on");
-  const g=curGenre(), [word,emoji]=topicsNow()[S.num-1];
+  const g = PRACTICE ? {icon:"🔰", name:"練習", color:"#9BE15D"} : curGenre();
+  const [word,emoji] = PRACTICE ? [PRACTICE.word, PRACTICE.emoji] : topicsNow()[S.num-1];
   const fh=$("forehead"); fh.style.setProperty("--gc", g.color);
   $("fh-genre").textContent = g.icon+" "+g.name;
   $("fh-card").classList.remove("on"); $("fh-actions").style.display="none"; $("fh-hint").style.display="none"; $("fh-back").style.display="none"; $("fh-hintbtn").style.display="none"; $("fh-passbtn").style.display="none";
-  $("fh-result").classList.remove("on"); showMiss(); myPrev=statusOf(S.num).s;
+  $("fh-result").classList.remove("on"); showMiss(); if(!PRACTICE) myPrev=statusOf(S.num).s;
   fh.classList.add("on"); keepAwake();
   if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
-  if(!S.online && !S.start){ S.start=Date.now(); save(); }
+  if(!PRACTICE && !S.online && !S.start){ S.start=Date.now(); save(); }
   let c=3; const cnt=$("fh-count");
   const tick=()=>{ cnt.textContent=c; cnt.classList.remove("pop"); void cnt.offsetWidth; cnt.classList.add("pop"); };
   tick(); clearInterval(fhTimer);
@@ -1056,7 +1262,7 @@ function startForehead(){
     $("fh-emoji").textContent=emoji; $("fh-emoji").style.display = emoji ? "" : "none"; $("fh-word").textContent=word;
     $("fh-card").classList.add("on"); fitTopic();
     $("fh-hint").style.display="block";
-    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hintbtn").style.display="block"; $("fh-passbtn").style.display = (S.passUsed||{})[S.num] ? "none" : "block"; $("fh-hint").style.display="none"; } }, 3000);
+    setTimeout(()=>{ if(fh.classList.contains("on")){ $("fh-actions").style.display="grid"; $("fh-back").style.display="block"; $("fh-hintbtn").style.display = PRACTICE ? "none" : "block"; $("fh-passbtn").style.display = PRACTICE || (S.passUsed||{})[S.num] ? "none" : "block"; $("fh-hint").style.display="none"; } }, 3000);
   },1000);
 }
 function closeForehead(){
@@ -1095,7 +1301,26 @@ function resultsOf(n, topics, ranks, gave, miss){
     return {p, name:nameOf(p), topic:topics[k][0], s, rank:r>=0?r:undefined, t:r>=0?ranks[r].t:undefined, miss:miss[p]||0, pts: s==="win" ? n-r : 0};
   });
 }
-function roundResults(){ fix(); return resultsOf(nP(), topicsNow(), S.ranks, S.gave, S.miss); }
+function roundResults(){ fix(); return isWolf() ? wolfNow().results : resultsOf(nP(), topicsNow(), S.ranks, S.gave, S.miss); }
+// 総合（連続1位ボーナスつき）。2連続1位で＋2、3連続で＋3…
+function computeTotals(){
+  const rounds=[...(S.history||[]).map(h=>h.results||[]), roundResults()], tot={};
+  rounds.forEach(res=>{
+    const wolfRound = res.some(x=>x.s==="wolf"||x.s==="village");
+    res.forEach(x=>{
+      const t=tot[x.name]=tot[x.name]||{pts:0, bonus:0, wins:0, streak:0};
+      t.pts += x.pts||0;
+      if(wolfRound){ if((x.pts||0)>0) t.wins++; return; }
+      if(x.s==="win" && x.rank===0){ t.streak++; t.wins++; if(t.streak>=2) t.bonus+=t.streak; }
+      else if(x.s!=="play") t.streak=0;
+    });
+  });
+  return Object.entries(tot).map(([name,v])=>({name, ...v, total:v.pts+v.bonus})).sort((a,b)=>b.total-a.total);
+}
+const streakOf = name => (computeTotals().find(x=>x.name===name)||{}).streak||0;
+function totalsHTML(list){
+  return list.map((v,k)=>`<div class="tot"><span>${k<3&&v.total>0?MEDALS[k]:"　"}</span><b>${esc(v.name)}${v.bonus?`<span class="bonus">🔥+${v.bonus}</span>`:""}</b><span class="pt">${v.total}</span><span>点</span></div>`).join("");
+}
 
 // 判定（おでこ画面のボタン：画面を見ている人が押す）
 function setResult(p, kind){
@@ -1123,9 +1348,10 @@ function setResult(p, kind){
   if(kind==="undo"){ S.ranks=S.ranks.filter(x=>x.p!==p); S.gave=S.gave.filter(x=>x!==p); }
   save(); return true;
 }
-function showMiss(){ fix(); const m=missOf(S.num), el=$("fh-miss"); el.style.display = m ? "block" : "none"; el.textContent=`❌ × ${m}`; }
+function showMiss(){ fix(); const m = PRACTICE ? PRACTICE.miss : missOf(S.num), el=$("fh-miss"); el.style.display = m ? "block" : "none"; el.textContent=`❌ × ${m}`; }
 function showResult(kind){
   const p=S.num, topic=topicsNow()[p-1], st=statusOf(p);
+  $("fr-board").textContent="記録ボードを見る";
   clearInterval(fhTimer);
   $("fr-title").textContent = kind==="win" ? `正解！ ${medal(st.rank)}` : "ざんねん！";
   $("fr-ans").innerHTML = `${topic[1]?`<span>${topic[1]}</span>`:""}${esc(topic[0])}`;
@@ -1134,6 +1360,7 @@ function showResult(kind){
   if(kind==="win") confetti();
 }
 function judge(kind){
+  if(PRACTICE) return practiceJudge(kind);
   const p=S.num;
   if(kind==="miss"){
     if(!setResult(p,"miss")) return;
@@ -1194,7 +1421,35 @@ function usePass(){
   }});
 }
 
-function openBoard(){ closeForehead(); fix(); renderBoard(); go("s-board"); }
+function openBoard(){ if(PRACTICE){ endPractice(true); return; } closeForehead(); fix(); renderBoard(); go("s-board"); }
+
+// ===== 練習（30秒） =====
+function startPractice(){
+  const pool=listFor(0, true);
+  const [word,emoji]=pool[Math.floor(Math.random()*pool.length)];
+  PRACTICE={word, emoji, miss:0};
+  startForehead();
+}
+function practiceJudge(kind){
+  if(kind==="miss"){
+    PRACTICE.miss++; showMiss();
+    const c=$("fh-card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+    if(navigator.vibrate) navigator.vibrate(200); return;
+  }
+  clearInterval(fhTimer);
+  $("fr-title").textContent = kind==="win" ? "練習クリア！" : "ざんねん！";
+  $("fr-ans").innerHTML = `<span>${PRACTICE.emoji}</span>${esc(PRACTICE.word)}`;
+  $("fr-sub").textContent = `ハズレ ${PRACTICE.miss}回。本番もこの流れです`;
+  $("fr-board").textContent = "練習をおわる";
+  const ro=document.querySelector("#fh-result .online-only"); if(ro) ro.style.display="none";
+  $("fh-result").classList.add("on");
+  if(kind==="win") confetti();
+}
+function endPractice(done){
+  closeForehead(); PRACTICE=null;
+  $("pr-done").style.display = done ? "block" : "none";
+  go("s-practice");
+}
 function renderBoard(){
   fix(); showOnlineOnly();
   const n=nP(), topics=topicsNow();
@@ -1231,14 +1486,9 @@ function renderBoard(){
   }
 
   // 総合ランキング（終わったラウンド＋今のラウンド）
-  const tot={};
-  const add=(name,pts,win)=>{ tot[name]=tot[name]||{pts:0,win:0}; tot[name].pts+=pts; if(win) tot[name].win++; };
-  S.history.forEach(r=>{ if(r.results) r.results.forEach(x=>add(x.name,x.pts,x.s==="win"&&x.rank===0)); });
-  res.forEach(x=>add(x.name,x.pts,x.s==="win"&&x.rank===0));
-  const list=Object.entries(tot).sort((a,b)=>b[1].pts-a[1].pts);
-  const any=list.some(([,v])=>v.pts>0);
-  $("total-card").style.display = any ? "block" : "none";
-  $("total").innerHTML = list.map(([name,v],k)=>`<div class="tot"><span>${k<3&&v.pts>0?MEDALS[k]:"　"}</span><b>${esc(name)}</b><span class="pt">${v.pts}</span><span>点</span></div>`).join("");
+  const list=computeTotals();
+  $("total-card").style.display = list.some(v=>v.total>0) ? "block" : "none";
+  $("total").innerHTML = totalsHTML(list);
 
   // これまでの結果
   $("hist-card").style.display = S.history.length ? "block" : "none";
@@ -1265,7 +1515,7 @@ function sheetDo(kind){
   const ok=setResult(p,kind);
   if(!ok){ toast(kind==="miss" ? "決着ずみです" : "すでに記録されています"); return; }
   renderBoard();
-  if(kind==="win"){ confetti(); toast(`${nameOf(p)} ${medal(statusOf(p).rank)}！`); }
+  if(kind==="win"){ confetti(); const st=statusOf(p), sk=st.rank===0 ? streakOf(nameOf(p)) : 0; toast(`${nameOf(p)} ${medal(st.rank)}！${sk>=2?` 🔥${sk}連続 +${sk}`:""}`); }
   else if(kind==="miss") toast(`${nameOf(p)} ハズレ${missOf(p)}回目`);
   else if(kind==="give") toast(`${nameOf(p)} ギブアップ`);
   else toast("取り消しました");
@@ -1282,6 +1532,10 @@ function rename(p){
 let gpSel=0, gpMode="next", gpEasy=false;
 function nextRound(){
   fix();
+  if(isWolf()){
+    ask({title:`ラウンド${S.round+2}へ`, text: S.online ? "全員のスマホが次のラウンドに進みます" : "全員のスマホで押してね", ok:"次のラウンドへ", onOk:()=>quickNext("same")});
+    return;
+  }
   const left = roundResults().filter(r=>r.s==="play").length;
   gpSel = hist()[S.round]; gpMode="next"; gpEasy = isEasy();
   const g=curGenre();
@@ -1334,11 +1588,221 @@ function confirmNextRound(){
     }).then(r=>{ if(!r.committed) toast("ほかの人が先に次のラウンドへ進めました"); }).catch(()=>toast("通信できませんでした"));
     return;
   }
-  S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
+  if(isWolf()){ const w=wolfNow(); S.history.push({round:S.round+1, genre:"ワードウルフ", wolf:{name:nameOf(w.wolf), major:w.major, minor:w.minor, caught:w.caught, decided:w.decided}, results:w.results}); }
+  else S.history.push({round:S.round+1, genre:curGenre().name, results:roundResults()});
+  recordSeason();
   hist(); ehist(); S.round++; S.gHist[S.round]=g; S.eHist[S.round]=gpEasy;
-  S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; S.passUsed={}; save();
-  renderReady(); go("s-ready");
-  toast(`ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}${gpEasy?"・かんたん":""}`);
+  S.ranks=[]; S.gave=[]; S.miss={}; S.start=null; S.hint=false; S.hintUsed={}; S.passUsed={};
+  S.wolfReveal=false; S.wolfOut=null; S.talk=0; save();
+  goGame();
+  toast(isWolf() ? `ラウンド${S.round+1} スタート` : `ラウンド${S.round+1}：${GENRES[g].icon} ${GENRES[g].name}${gpEasy?"・かんたん":""}`);
+}
+
+// ===== ワードウルフ =====
+const TALK_SEC = 180;
+let talkEndedFor = 0;
+const nAt = r => S.online ? ((S.nh||[])[r]||0) : countOf(S.code);
+function wolfDeal(seed, r, n){
+  const L=WOLF_PAIRS.length, order=shuffled([...Array(L).keys()], seed+":wolf:"+Math.floor(r/L));
+  const pair=WOLF_PAIRS[order[r%L]], flip=hash(seed+":wf:"+r)%2;
+  return {major:pair[flip], minor:pair[1-flip], wolf: n ? hash(seed+":ww:"+r)%n+1 : 0};
+}
+const wolfAt = r => wolfDeal(S.online ? "on:"+S.seed : "odeko:"+S.code, r, nAt(r));
+// ラウンドの状態と点数。通信あり＝投票で決まる（同票1位にウルフがいたら つかまえた）、通信なし＝結果を手で入力
+function wolfState(r, data){
+  data=data||{}; const n=nAt(r), d=wolfAt(r), votes=data.votes||{}, tally={};
+  Object.entries(votes).forEach(([p,t])=>{ if(+p<=n && t) tally[t]=(tally[t]||0)+1; });
+  const max=Math.max(0, ...Object.values(tally));
+  const revealed=!!data.reveal, decided = S.online ? revealed : !!data.out;
+  const caught = S.online ? (max>0 && tally[d.wolf]===max) : data.out==="caught";
+  const results=Array.from({length:n},(_,k)=>{
+    const p=k+1, isW=p===d.wolf;
+    const pts = !decided ? 0 : caught ? (isW ? 0 : 1 + (S.online && votes[p]===d.wolf ? 1 : 0)) : (isW ? 3 : 0);
+    return {p, name:nameOf(p), topic: isW ? d.minor : d.major, s: isW ? "wolf" : "village", pts, vote:votes[p]||0};
+  });
+  return {...d, n, tally, max, revealed, decided, caught, results};
+}
+function wolfNow(){ return wolfState(S.round, S.online ? (S.wolfData||{}) : {out:S.wolfOut, reveal:S.wolfReveal}); }
+function renderWolf(){
+  fix(); showOnlineOnly();
+  const watcher=isWatcher(), n=nP(), R=wolfNow();
+  $("w-code").textContent = `部屋 ${S.code}`;
+  $("w-round").textContent = `ラウンド ${S.round+1}`;
+  $("w-net").style.display = S.online ? "inline-block" : "none";
+  $("w-net").textContent = netOK ? "🟢 通信中" : "🔴 再接続中…";
+  $("w-num").innerHTML = `${S.num}<small> 番</small>` + (S.names[S.num] ? `<span class="you-name">${esc(S.names[S.num])}</span>` : "");
+  $("w-note").textContent = watcher ? "途中参加なので、次のラウンドから参加します。今は見学してね"
+    : `${n}人のうち1人だけ、ちがうお題の「ウルフ」がいます。自分がウルフかもしれません`;
+  $("w-wordcard").style.display = watcher ? "none" : "";
+  renderVoiceBtns(); tickTalk();
+  // 投票（通信あり）
+  const voting = S.online && !R.revealed;
+  $("w-votecard").style.display = voting ? "" : "none";
+  if(voting){
+    const votes=(S.wolfData||{}).votes||{}, my=votes[S.num];
+    $("w-votes").innerHTML = Array.from({length:n},(_,k)=>k+1).filter(p=>p!==S.num).map(p=>
+      `<button class="vbtn ${my===p?'sel':''}" onclick="voteWolf(${p})" ${watcher?'disabled':''}><span class="pnum">${p}</span>${esc(nameOf(p))}</button>`).join("");
+    const cnt=Object.keys(votes).filter(k=>+k<=n).length;
+    $("w-vstat").textContent = `投票ずみ ${cnt}／${n}人` + (my ? `（あなたは ${nameOf(my)} に投票）` : "");
+  }
+  $("w-reveal").style.display = R.revealed ? "none" : "";
+  // 結果
+  $("w-result").style.display = R.revealed ? "" : "none";
+  if(R.revealed){
+    $("w-res-title").textContent = `ウルフは ${R.wolf}番 ${nameOf(R.wolf)}！`;
+    $("w-res-words").innerHTML = `みんな：<b>${esc(R.major)}</b><br>ウルフ：<b>${esc(R.minor)}</b>`;
+    $("w-res-tally").innerHTML = S.online ? Array.from({length:n},(_,k)=>k+1).map(p=>
+      `<div class="tot"><span>${p===R.wolf?"🐺":"🙂"}</span><b>${esc(nameOf(p))}</b><span>${R.tally[p]||0}票</span></div>`).join("") : "";
+    $("w-offjudge").style.display = !S.online && !R.decided ? "grid" : "none";
+    $("w-res-out").textContent = !R.decided ? "話し合いの結果、ウルフをつかまえた？" : R.caught
+      ? "🎉 ウルフをつかまえた！ 村人に1点" + (S.online ? "（ウルフに投票した人は＋1点）" : "")
+      : "🐺 ウルフの逃げ切り！ ウルフに3点";
+  }
+  // 総合とこれまで
+  const list=computeTotals();
+  $("w-total-card").style.display = list.some(v=>v.total>0) ? "block" : "none";
+  $("w-total").innerHTML = totalsHTML(list);
+  $("w-hist-card").style.display = S.history.length ? "block" : "none";
+  $("w-hist").innerHTML = S.history.slice().reverse().map(h=>{
+    const w=h.wolf||{};
+    return `<div class="r"><b>ラウンド${h.round}</b><br>ウルフ：${esc(w.name||"")}（${esc(w.minor||"")}）／みんな：${esc(w.major||"")}<br>${!w.decided ? "結果なし" : w.caught ? "🎉 つかまえた" : "🐺 逃げ切り"}</div>`;
+  }).join("");
+}
+// お題は押している間だけ見える
+(function(){
+  const b=$("w-word");
+  const show=on=>{
+    if(on && !isWatcher() && S.code){ const d=wolfAt(S.round); b.textContent = S.num===d.wolf ? d.minor : d.major; b.classList.add("open"); }
+    else { b.textContent="👆 おしている間だけ見えます"; b.classList.remove("open"); }
+  };
+  b.addEventListener("pointerdown", e=>{ e.preventDefault(); show(true); });
+  ["pointerup","pointerleave","pointercancel","blur"].forEach(ev=>b.addEventListener(ev, ()=>show(false)));
+  b.addEventListener("keydown", e=>{ if(e.key===" "||e.key==="Enter") show(true); });
+  b.addEventListener("keyup", ()=>show(false));
+  b.addEventListener("contextmenu", e=>e.preventDefault());
+})();
+function talkStart(){ return S.online ? ((S.wolfData||{}).talk||0) : (S.talk||0); }
+function startTalk(){
+  if(S.online) txRound(cur=>{ cur=cur||{}; cur.talk=NET.now(); return cur; });
+  else { S.talk=Date.now(); save(); }
+  talkEndedFor=0; tickTalk();
+}
+function tickTalk(){
+  if(!onScreen("s-wolf")) return;
+  const st=talkStart(), el=$("w-timer");
+  if(!st){ el.textContent="3:00"; el.classList.remove("end"); $("w-talk").textContent="話し合いスタート"; return; }
+  const left=Math.max(0, TALK_SEC*1000-(now()-st));
+  el.textContent = fmt(left); el.classList.toggle("end", left===0);
+  $("w-talk").textContent="もう一度スタート";
+  if(left===0 && talkEndedFor!==st){
+    talkEndedFor=st;
+    if(now()-st < TALK_SEC*1000+5000){ toast("時間です！"); playReact(1); speak(S.online ? "時間です。ウルフだと思う人に投票してください" : "時間です。ウルフだと思う人を指さしてください"); }
+  }
+}
+setInterval(tickTalk, 500);
+function voteWolf(p){
+  if(isWatcher()) return;
+  txRound(cur=>{ cur=cur||{}; if(cur.reveal) return; cur.votes=cur.votes||{}; cur.votes[pk(S.num)]=p; return cur; });
+}
+function revealWolf(){
+  const n=nP(), cnt=S.online ? Object.keys((S.wolfData||{}).votes||{}).filter(k=>+k<=n).length : 0;
+  ask({title:"結果発表しますか？", text: S.online ? `投票ずみ ${cnt}／${n}人` : "全員の話し合いが終わったら押してね", ok:"結果発表", onOk:()=>{
+    if(S.online) txRound(cur=>{ cur=cur||{}; cur.reveal=true; return cur; });
+    else { S.wolfReveal=true; save(); renderWolf(); }
+  }});
+}
+function wolfOutcome(o){ S.wolfOut=o; save(); renderWolf(); if(o==="caught") confetti(); }
+
+// ===== 実況（読み上げ）。通信ありでは1台だけがしゃべる =====
+let voiceOn = (()=>{ try{ return localStorage.getItem("odeko_voice")!=="0"; }catch(e){ return true; } })();
+let annPrev=null, spokeOnce=false;
+const san = name => /(さん|ちゃん|くん|君|様|さま|氏)$/.test(name) ? name : name+"さん";   // 読み上げ用の呼び方
+function isAnnouncer(){ if(!S.online) return true; return S.announcer ? S.announcer===PID : S.num===1; }
+function speak(text){
+  if(!voiceOn || !isAnnouncer() || !("speechSynthesis" in window) || !text) return;
+  try{ const u=new SpeechSynthesisUtterance(text); u.lang="ja-JP"; u.rate=1.05; speechSynthesis.speak(u); }catch(e){}
+}
+function renderVoiceBtns(){
+  const t = !voiceOn ? "🔇 実況オフ" : isAnnouncer() ? "🎙 実況中（このスマホ）" : "🎙 このスマホで実況する";
+  ["r-voice","w-voice"].forEach(id=>{ const b=$(id); if(b) b.textContent=t; });
+}
+function voiceBtn(){
+  if(S.online && voiceOn && !isAnnouncer()){
+    NET.set(`rooms/${S.code}/announcer`, PID).then(()=>toast("このスマホが実況します")).catch(()=>toast("通信できませんでした"));
+  } else {
+    voiceOn=!voiceOn; try{ localStorage.setItem("odeko_voice", voiceOn ? "1" : "0"); }catch(e){}
+    toast(voiceOn ? "実況オン" : "実況オフ");
+    if(voiceOn) speak("実況をはじめます");
+  }
+  renderVoiceBtns();
+}
+function announceCheck(){
+  if(!S.code || (S.online && S.phase!=="play") || PRACTICE){ annPrev=null; return; }
+  const wolf=isWolf(), R = wolf ? wolfNow() : null;
+  const snap = wolf ? {room:S.code, round:S.round, reveal:R.revealed, decided:R.decided}
+                    : {room:S.code, round:S.round, wins:S.ranks.map(x=>x.p), gave:[...S.gave], done:allDone()};
+  const prev=annPrev; annPrev=snap;
+  if(!prev || prev.room!==snap.room) return;        // 開いた直後は何も言わない
+  if(prev.round!==snap.round){
+    speak(wolf ? `ラウンド${S.round+1}。お題を確認して、話し合いを始めてください`
+               : `ラウンド${S.round+1}。ジャンルは${curGenre().name}${isEasy() ? "、かんたんモード" : ""}です`);
+    return;
+  }
+  if(wolf){
+    const lines=[];
+    if(!prev.reveal && snap.reveal) lines.push(`結果発表！ウルフは、${san(nameOf(R.wolf))}でした`);
+    if(!prev.decided && snap.decided) lines.push(R.caught ? "ウルフをつかまえました！" : "ウルフの逃げ切りです！");
+    if(lines.length) speak(lines.join("。"));
+    return;
+  }
+  const lines=[];
+  snap.wins.filter(p=>!prev.wins.includes(p)).forEach(p=>{
+    const rank=S.ranks.findIndex(x=>x.p===p);
+    lines.push(`${san(nameOf(p))}、正解！${rank+1}位です`);
+    if(rank===0){ const sk=streakOf(nameOf(p)); if(sk>=2) lines.push(`${sk}連続1位！ボーナス${sk}点`); }
+  });
+  snap.gave.filter(p=>!prev.gave.includes(p)).forEach(p=>lines.push(`${san(nameOf(p))}、ギブアップ`));
+  if(lines.length){
+    if(snap.done && !prev.done){ const first=S.ranks[0]; lines.push(first ? `ラウンド終了！1位は${san(nameOf(first.p))}でした` : "ラウンド終了！"); }
+    else { const left=[]; for(let i=1;i<=nP();i++) if(statusOf(i).s==="play") left.push(i); if(left.length===1) lines.push(`残り1人！がんばれ、${san(nameOf(left[0]))}`); }
+    speak(lines.join("。"));
+  }
+}
+
+// ===== シーズンランキング（このスマホに月ごとに記録） =====
+function seasonLoad(){ try{ return JSON.parse(localStorage.getItem("odeko_season")) || {rec:{}, m:{}}; }catch(e){ return {rec:{}, m:{}}; } }
+function seasonSave(x){ try{ localStorage.setItem("odeko_season", JSON.stringify(x)); }catch(e){} }
+const monthKey = (d=new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+function recordSeason(){
+  if(!S.code || !S.history || !S.history.length) return;
+  const base = S.online ? "on:"+S.seed : "off:"+S.code+":"+(S.made||0);
+  const x=seasonLoad(), mk=monthKey(); let changed=false;
+  S.history.forEach(h=>{
+    const key=base+":"+h.round; if(x.rec[key]) return;
+    x.rec[key]=1; changed=true;
+    const m=x.m[mk]=x.m[mk]||{};
+    (h.results||[]).forEach(r=>{
+      const t=m[r.name]=m[r.name]||{pts:0, wins:0, rounds:0};
+      t.pts+=r.pts||0; t.rounds++;
+      if((r.s==="win" && r.rank===0) || ((r.s==="wolf"||r.s==="village") && (r.pts||0)>0)) t.wins++;
+    });
+  });
+  if(changed) seasonSave(x);
+}
+let seasonMonth=null;
+function renderSeason(){
+  const x=seasonLoad(), months=Object.keys(x.m).filter(k=>Object.keys(x.m[k]).length).sort().reverse();
+  $("season").style.display = months.length ? "block" : "none";
+  if(!months.length) return;
+  if(!seasonMonth || !months.includes(seasonMonth)) seasonMonth=months[0];
+  const label=k=>{ const [y,mo]=k.split("-"); return k===monthKey() ? "今月" : `${y}年${+mo}月`; };
+  $("season").querySelector("h3").textContent = `🏆 ${label(seasonMonth)}のランキング`;
+  $("season-months").innerHTML = months.length>1 ? months.slice(0,6).map(k=>`<button class="${k===seasonMonth?'sel':''}" onclick="seasonMonth='${k}';renderSeason()">${label(k)}</button>`).join("") : "";
+  const list=Object.entries(x.m[seasonMonth]).sort((a,b)=>b[1].pts-a[1].pts || b[1].wins-a[1].wins).slice(0,10);
+  $("season-list").innerHTML = list.map(([name,v],k)=>`<div class="tot"><span>${k<3?MEDALS[k]:`${k+1}.`}</span><b>${esc(name)}</b><span style="font-size:12px;color:var(--muted)">勝ち${v.wins}・${v.rounds}戦</span><span class="pt">${v.pts}</span><span>点</span></div>`).join("");
+}
+function resetSeason(){
+  ask({title:"シーズンの記録を消しますか？", text:"このスマホに保存したランキングがすべて消えます", ok:"消す", onOk:()=>{ seasonSave({rec:seasonLoad().rec, m:{}}); renderSeason(); toast("記録を消しました"); }});
 }
 
 // ===== リアクション（通信あり：全員のスマホに表示して音を鳴らす） =====
@@ -1367,7 +1831,10 @@ function checkReact(r){
   playReact(r.i);
 }
 // 効果音（音のファイルを使わず、その場で作る）
-function unlockAudio(){ try{ if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==="suspended") audio.resume(); }catch(e){} }
+function unlockAudio(){
+  try{ if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==="suspended") audio.resume(); }catch(e){}
+  if(!spokeOnce && "speechSynthesis" in window){ spokeOnce=true; try{ const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }catch(e){} }
+}
 addEventListener("pointerdown", unlockAudio, {passive:true});
 function tone(freq, start, dur, type="square", vol=0.12){
   const o=audio.createOscillator(), g=audio.createGain(), t=audio.currentTime+start;
